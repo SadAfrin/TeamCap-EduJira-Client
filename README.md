@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EduJira 🎓
 
-## Getting Started
+EduJira is a modern, AI-powered school management platform designed to replace scattered spreadsheets and paper registers. Built with a focus on user experience, it provides intelligent insights and customized, role-based dashboards for administrators, teachers, students, and parents.
 
-First, run the development server:
+## 🚀 Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Framework:** Next.js
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Database:** MongoDB
+- **UI Components:** React (Custom modern UI with glassmorphism and smooth animations)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Core Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+EduJira is split into two main operational pillars:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🧠 AI-Powered Intelligence
 
-## Learn More
+- **Early Warning System:** Analyzes grades, attendance, and behavior trends to flag at-risk students before they fall behind.
+- **Automated Report Cards:** Generates personalized, human-readable performance narratives for students.
+- **Pattern Analyzer:** Detects unusual attendance or behavioral anomalies.
+- **Multilingual Notices:** Automatically translates school announcements into a parent's preferred language.
+- **Resource Planner:** Suggests optimal classroom and teacher allocation based on schedule capacity.
 
-To learn more about Next.js, take a look at the following resources:
+### 🏫 Daily Academic Operations
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Role-Based Dashboards:** Four distinct views tailored specifically for Admins, Teachers, Students, and Parents.
+- **Digital Attendance:** Streamlined daily attendance tracking with automated summary reports.
+- **Grade Management:** Secure input for term marks, automatic result calculations, and transcript generation.
+- **Timetable Management:** Centralized scheduling for class routines across all grades and sections.
+- **Digital Leave Workflows:** Parents can submit absence requests and doctor's notes directly through their portal.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 👥 User Roles
 
-## Deploy on Vercel
+1. **Admin:** High-level analytics, resource management, and school-wide oversight.
+2. **Teacher:** Streamlined grading, attendance tracking, and student performance monitoring.
+3. **Student:** Clear views of timetables, assignments, and personal progress.
+4. **Parent:** Real-time visibility into their child's academic journey and direct communication channels.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Getting Started
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Follow these steps to set up the project locally on your machine.
+
+### Prerequisites
+
+Make sure you have [Node.js](https://nodejs.org/) and [Git](https://git-scm.com/) installed on your machine. You will also need a MongoDB database URI.
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/SadAfrin/edujira.git](https://github.com/SadAfrin/edujira.git)
+   cd edujira
+   ```
