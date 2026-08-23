@@ -80,10 +80,11 @@ export default function LoginForm() {
     }
   };
 
-const handleGoogleLogin = async () => {
-  setGoogleLoading(true);
-  await signIn("google", { callbackUrl: `/dashboard/${role}` });
-};
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    await signIn("google", { callbackUrl: `/dashboard/${role}` });
+  };
+
   return (
     <div className="w-full max-w-md">
       <h1 className="font-serif text-4xl text-[#1f2a44] mb-1">EduJira</h1>
