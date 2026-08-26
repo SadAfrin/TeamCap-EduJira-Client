@@ -38,6 +38,18 @@ export default function Navbar() {
           >
             About
           </Link>
+          <Link
+            href="/calendar"
+            className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
+          >
+            Calendar
+          </Link>
+          <Link
+            href="/timetable"
+            className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
+          >
+            Timetable
+          </Link>
         </nav>
 
         {/* Desktop Action Button & Mobile Toggle */}
@@ -114,6 +126,20 @@ export default function Navbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               About
+            </Link>
+            <Link
+              href="/calendar"
+              className="text-lg font-semibold text-slate-900 transition-colors hover:text-indigo-600"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Calendar
+            </Link>
+            <Link
+              href="/timetable"
+              className="text-lg font-semibold text-slate-900 transition-colors hover:text-indigo-600"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Timetable
             </Link>
 
             <div className="mt-4 border-t border-slate-100 pt-6">
