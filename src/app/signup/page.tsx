@@ -13,20 +13,35 @@ const roles = [
 
 type RoleId = (typeof roles)[number]["id"];
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [activeRole, setActiveRole] = useState<RoleId>("student");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Enter your email and password to continue.");
+
+    if (!name || !email || !password || !confirmPassword) {
+      setError("Please fill in all fields to continue.");
       return;
     }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match. Please try again.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
     setError("");
+    // Hook up to your MERN backend registration route here
     router.push(`/calendar?role=${activeRole}`);
   }
 
@@ -43,7 +58,7 @@ export default function LoginPage() {
         ></div>
       </div>
 
-      {/* Login Card */}
+      {/* Registration Card */}
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/80 p-8 shadow-xl shadow-slate-200/50 backdrop-blur-xl sm:p-10">
         {/* Header / Logo */}
         <div className="flex flex-col items-center text-center">
@@ -54,10 +69,10 @@ export default function LoginPage() {
             Edu<span className="text-indigo-600">Jira</span>
           </Link>
           <h1 className="mt-8 text-2xl font-bold tracking-tight text-slate-900">
-            Welcome back
+            Create an account
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Choose your role, then enter your details.
+            Select your role and enter your details to get started.
           </p>
         </div>
 
@@ -81,11 +96,28 @@ export default function LoginPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          <div>
+            <label
+              htmlFor="name"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
+            >
+              Full Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Doe"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+            />
+          </div>
+
           <div>
             <label
               htmlFor="email"
-              className="mb-2 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
             >
               Email address
             </label>
@@ -100,25 +132,34 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <div className="mb-2 flex items-center justify-between">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-slate-700"
-              >
-                Password
-              </label>
-              <Link
-                href="#"
-                className="text-xs font-medium text-indigo-600 hover:text-indigo-500 hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
+            <label
+              htmlFor="password"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
+            >
+              Password
+            </label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
+            >
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
             />
@@ -137,15 +178,18 @@ export default function LoginPage() {
             type="submit"
             className="mt-2 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
-            Sign in as {roles.find((r) => r.id === activeRole)?.label}
+            Register as {roles.find((r) => r.id === activeRole)?.label}
           </button>
         </form>
 
-        <p className="mt-8 text-center text-xs text-slate-500">
-          Trouble signing in?{" "}
-          <a href="#" className="font-medium text-indigo-600 hover:underline">
-            Contact your administrator.
-          </a>
+        <p className="mt-8 text-center text-sm text-slate-500">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="font-semibold text-indigo-600 hover:underline"
+          >
+            Sign in
+          </Link>
         </p>
       </div>
     </div>

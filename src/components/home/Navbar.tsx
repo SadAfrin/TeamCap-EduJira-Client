@@ -38,6 +38,18 @@ export default function Navbar() {
           >
             About
           </Link>
+          <Link
+            href="/calendar"
+            className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
+          >
+            Calendar
+          </Link>
+          <Link
+            href="/timetable"
+            className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
+          >
+            Timetable
+          </Link>
         </nav>
 
         {/* Desktop Action Button & Mobile Toggle */}
@@ -47,6 +59,12 @@ export default function Navbar() {
             className="hidden rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 md:block"
           >
             Sign in
+          </Link>
+          <Link
+            href="/signup"
+            className="hidden rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 md:block"
+          >
+            Sign Up
           </Link>
 
           {/* Mobile Menu Button */}
@@ -115,6 +133,20 @@ export default function Navbar() {
             >
               About
             </Link>
+            <Link
+              href="/calendar"
+              className="text-lg font-semibold text-slate-900 transition-colors hover:text-indigo-600"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Calendar
+            </Link>
+            <Link
+              href="/timetable"
+              className="text-lg font-semibold text-slate-900 transition-colors hover:text-indigo-600"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Timetable
+            </Link>
 
             <div className="mt-4 border-t border-slate-100 pt-6">
               <Link
@@ -123,6 +155,13 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Sign in to your portal
+              </Link>
+              <Link
+                href="/signup"
+                className="flex w-full my-2 items-center justify-center rounded-xl bg-indigo-600 px-5 py-3.5 text-base font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Sign up for an account
               </Link>
             </div>
           </nav>
