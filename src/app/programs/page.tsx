@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const aiFeatures = [
   {
     title: "AI early warning system",
@@ -14,6 +16,7 @@ const aiFeatures = [
   {
     title: "Multilingual notice translator",
     body: "Automatically translates school notices and announcements into each parent's preferred language.",
+    link: "/programs/notice",
   },
   {
     title: "Automated resource & classroom allocation planner",
@@ -175,12 +178,14 @@ export default function ProgramsPage() {
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {aiFeatures.map((f) => (
-            <FeatureCard
-              key={f.title}
-              title={f.title}
-              body={f.body}
-              variant="ai"
-            />
+            <Link href={f.link || "#"} key={f.title} className="group">
+              <FeatureCard
+                key={f.title}
+                title={f.title}
+                body={f.body}
+                variant="ai"
+              />
+            </Link>
           ))}
         </div>
       </section>
