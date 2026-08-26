@@ -26,18 +26,7 @@ export default function Navbar() {
           >
             Features
           </Link>
-          <a
-            href="#roles"
-            className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
-          >
-            Who it&apos;s for
-          </a>
-          <Link
-            href="/about"
-            className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
-          >
-            About
-          </Link>
+          
           <Link
             href="/calendar"
             className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
@@ -49,6 +38,12 @@ export default function Navbar() {
             className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
           >
             Timetable
+          </Link>
+          <Link
+            href="/about"
+            className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
+          >
+            About
           </Link>
         </nav>
 
