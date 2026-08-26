@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const roles = [
   { id: "admin", label: "Admin" },
@@ -13,6 +14,7 @@ const roles = [
 type RoleId = (typeof roles)[number]["id"];
 
 export default function LoginPage() {
+  const router = useRouter();
   const [activeRole, setActiveRole] = useState<RoleId>("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +27,7 @@ export default function LoginPage() {
       return;
     }
     setError("");
-    // Hook up to your auth flow here.
+    router.push(`/calendar?role=${activeRole}`);
   }
 
   return (
