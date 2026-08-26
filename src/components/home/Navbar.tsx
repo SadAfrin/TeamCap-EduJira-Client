@@ -60,6 +60,12 @@ export default function Navbar() {
           >
             Sign in
           </Link>
+          <Link
+            href="/signup"
+            className="hidden rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 md:block"
+          >
+            Sign Up
+          </Link>
 
           {/* Mobile Menu Button */}
           <button
@@ -149,6 +155,13 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Sign in to your portal
+              </Link>
+              <Link
+                href="/signup"
+                className="flex w-full my-2 items-center justify-center rounded-xl bg-indigo-600 px-5 py-3.5 text-base font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Sign up for an account
               </Link>
             </div>
           </nav>
