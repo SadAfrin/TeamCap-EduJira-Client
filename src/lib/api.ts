@@ -5,7 +5,7 @@ export async function apiGet(path: string) {
   return res.json();
 }
 
-export async function apiPost(path: string, body: any) {
+export async function apiPost(path: string, body: unknown) {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

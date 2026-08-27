@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
 
 const roles = [
   { id: "admin", label: "Admin" },
@@ -13,21 +15,57 @@ const roles = [
 
 type RoleId = (typeof roles)[number]["id"];
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeRole, setActiveRole] = useState<RoleId>("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    if (searchParams.get("verified") === "true") {
+      toast.success("Email verified successfully! You can now log in.");
+    }
+  }, [searchParams]);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    // Validate fields
     if (!email || !password) {
-      setError("Enter your email and password to continue.");
+      const msg = "Enter your email and password to continue.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
+
     setError("");
-    router.push(`/calendar?role=${activeRole}`);
+
+    // Use a loading toast if you want, or just wait for the response
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email: email,
+        password: password,
+      });
+
+      // Handle authentication errors (e.g., wrong password)
+      if (error) {
+        setError(error.message || "Invalid email or password");
+        toast.error(error.message || "Invalid email or password");
+        return;
+      }
+
+      // Handle success
+      if (data) {
+        toast.success("Welcome back!");
+        router.push(`/calendar?role=${activeRole}`);
+      }
+    } catch (err: unknown) {
+      const fallbackError = "An unexpected error occurred. Please try again.";
+      setError(fallbackError);
+      toast.error((err as Error).message || fallbackError);
+    }
   }
 
   return (
@@ -149,5 +187,20 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    // You can put a simple loading spinner or blank page in the fallback
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+          Loading...
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
