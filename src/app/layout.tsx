@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} font-body min-h-screen bg-parchment text-ink antialiased`}
+        className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} font-body min-h-screen bg-slate-50 text-ink antialiased`}
       >
         <Toaster />
         <Navbar />

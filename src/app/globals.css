@@ -1,25 +1,6 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-display: var(--font-fraunces);
-  --font-body: var(--font-inter);
-  --font-data: var(--font-plex-mono);
 
-  --color-ink: #1e2a4a;
-  --color-ink-light: #2e3e63;
-  --color-parchment: #f5f0e1;
-  --color-parchment-dark: #ede6d3;
-  --color-chalk: #2f4b3c;
-  --color-brass: #c9a227;
-  --color-brass-light: #e2c157;
-  --color-pen: #b4453b;
-  --color-slate: #64708a;
-}
-
-body {
-  background-color: var(--color-parchment);
-  color: var(--color-ink);
-}
 
 /* Ledger rule pattern used behind the hero report-card widget */
 .ledger-rules {

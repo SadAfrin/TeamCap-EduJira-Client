@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -15,7 +15,7 @@ const roles = [
 
 type RoleId = (typeof roles)[number]["id"];
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeRole, setActiveRole] = useState<RoleId>("student");
@@ -187,5 +187,20 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    // You can put a simple loading spinner or blank page in the fallback
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+          Loading...
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -52,6 +52,19 @@ export default function AttendancePage() {
   async function loadRoster() {
     setLoading(true);
     setSaved(false);
+
+    if (USE_MOCK_DATA) {
+      const filtered = MOCK_STUDENTS.filter(
+        (s) => s.className === className && s.section === section,
+      );
+      setStudents(filtered);
+      const defaults: Record<string, StatusValue> = {};
+      filtered.forEach((s) => (defaults[s._id] = "Present"));
+      setStatusMap(defaults);
+      setLoading(false);
+      return;
+    }
+
     const json = await apiGet(
       `/students?className=${encodeURIComponent(className)}&section=${section}`,
     );
@@ -223,11 +236,23 @@ export default function AttendancePage() {
                         : ""
                     }`}
                   >
-                    <div>
-                      <p className="font-semibold text-slate-900">{s.name}</p>
-                      <p className="text-xs text-slate-400">
-                        ID: {s.studentId}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${avatarColor(
+                          s.name,
+                        )}`}
+                      >
+                        {initials(s.name)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">{s.name}</p>
+                        <p
+                          style={{ fontFamily: "var(--font-plex-mono)" }}
+                          className="text-xs text-slate-400"
+                        >
+                          {s.studentId}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       {STATUS_OPTIONS.map((opt) => (
