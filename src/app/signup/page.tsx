@@ -54,6 +54,7 @@ export default function RegisterPage() {
         name: name,
         image: imageUrl,
         role: activeRole,
+        callbackURL: "/login?verified=true",
       });
       console.log("Signup response:", { data, error });
       // 3. Handle backend errors
@@ -63,9 +64,13 @@ export default function RegisterPage() {
       }
 
       // 4. Handle success and redirect
+      // Handle success
       if (data) {
-        toast.success("Account created successfully!");
-        router.push(`/calendar?role=${activeRole}`);
+        toast.success(
+          "Account created! Please check your email to verify your account.",
+        );
+
+        router.push("/login");
       }
     } catch (err: unknown) {
       toast.error(
