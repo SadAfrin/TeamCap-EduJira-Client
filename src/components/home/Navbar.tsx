@@ -2,9 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
+import Image from "next/image";
+import { redirect } from "next/navigation";
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center h-16 bg-stone-50 border-b border-stone-200">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  console.log(user);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md transition-all">
@@ -54,18 +70,43 @@ export default function Navbar() {
 
         {/* Desktop Action Button & Mobile Toggle */}
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="hidden rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 md:block"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/signup"
-            className="hidden rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 md:block"
-          >
-            Sign Up
-          </Link>
+          {user ? (
+            <>
+              <div className="border-2 border-green-500 rounded-full">
+                <Image
+                  src={user?.image || "/profile.png"}
+                  width={30}
+                  height={30}
+                  alt="userimage"
+                  className="rounded-full object-cover w-auto h-auto"
+                />
+              </div>
+              <button
+                onClick={async () => {
+                  await authClient.signOut();
+                  redirect("/");
+                }}
+                className="px-4 py-2 text-sm font-medium bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
+              >
+                Log Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 md:block"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="hidden rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 md:block"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
 
           {/* Mobile Menu Button */}
           <button

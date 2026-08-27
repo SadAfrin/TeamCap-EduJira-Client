@@ -3,6 +3,7 @@ import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/home/Navbar";
 import Footer from "@/components/home/Footer";
+import { Toaster } from "react-hot-toast";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} font-body min-h-screen bg-parchment text-ink antialiased`}
       >
+        <Toaster />
         <Navbar />
         {children}
         <Footer />

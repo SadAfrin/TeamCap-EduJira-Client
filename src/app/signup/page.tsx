@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 const roles = [
   { id: "admin", label: "Admin" },
@@ -18,14 +20,16 @@ export default function RegisterPage() {
   const [activeRole, setActiveRole] = useState<RoleId>("student");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!name || !email || !password || !confirmPassword) {
+    // 1. Validate all fields
+    if (!name || !email || !imageUrl || !password || !confirmPassword) {
       setError("Please fill in all fields to continue.");
       return;
     }
@@ -41,8 +45,34 @@ export default function RegisterPage() {
     }
 
     setError("");
-    // Hook up to your MERN backend registration route here
-    router.push(`/calendar?role=${activeRole}`);
+
+    try {
+      // 2. Send data to better-auth using your React state variables
+      const { data, error } = await authClient.signUp.email({
+        email: email,
+        password: password,
+        name: name,
+        image: imageUrl,
+        role: activeRole,
+      });
+      console.log("Signup response:", { data, error });
+      // 3. Handle backend errors
+      if (error) {
+        toast.error(error.message || "Error signing up");
+        return; // Stop here if it fails
+      }
+
+      // 4. Handle success and redirect
+      if (data) {
+        toast.success("Account created successfully!");
+        router.push(`/calendar?role=${activeRole}`);
+      }
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          "An unexpected error occurred. Please try again.",
+      );
+    }
   }
 
   return (
@@ -127,6 +157,24 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@school.edu"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+            />
+          </div>
+
+          {/* NEW IMAGE URL FIELD */}
+          <div>
+            <label
+              htmlFor="imageUrl"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
+            >
+              Profile Image URL
+            </label>
+            <input
+              id="imageUrl"
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://example.com/my-photo.jpg"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
             />
           </div>

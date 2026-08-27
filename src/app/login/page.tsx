@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
 
 const roles = [
   { id: "admin", label: "Admin" },
@@ -20,14 +22,43 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    // Validate fields
     if (!email || !password) {
-      setError("Enter your email and password to continue.");
+      const msg = "Enter your email and password to continue.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
+
     setError("");
-    router.push(`/calendar?role=${activeRole}`);
+
+    // Use a loading toast if you want, or just wait for the response
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email: email,
+        password: password,
+      });
+
+      // Handle authentication errors (e.g., wrong password)
+      if (error) {
+        setError(error.message || "Invalid email or password");
+        toast.error(error.message || "Invalid email or password");
+        return;
+      }
+
+      // Handle success
+      if (data) {
+        toast.success("Welcome back!");
+        router.push(`/calendar?role=${activeRole}`);
+      }
+    } catch (err: unknown) {
+      const fallbackError = "An unexpected error occurred. Please try again.";
+      setError(fallbackError);
+      toast.error((err as Error).message || fallbackError);
+    }
   }
 
   return (
