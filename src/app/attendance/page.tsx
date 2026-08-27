@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
-import { MOCK_STUDENTS, CLASSES, SECTIONS, MockStudent } from "@/data/mockAttendance";
+import {
+  MOCK_STUDENTS,
+  CLASSES,
+  SECTIONS,
+  MockStudent,
+} from "@/data/mockAttendance";
 
 // Flip to false once the backend is deployed and reachable
 const USE_MOCK_DATA = true;
@@ -50,7 +55,7 @@ export default function AttendancePage() {
 
     if (USE_MOCK_DATA) {
       const filtered = MOCK_STUDENTS.filter(
-        (s) => s.className === className && s.section === section
+        (s) => s.className === className && s.section === section,
       );
       setStudents(filtered);
       const defaults: Record<string, StatusValue> = {};
@@ -60,14 +65,16 @@ export default function AttendancePage() {
       return;
     }
 
-    const json = await apiGet(`/students?className=${encodeURIComponent(className)}&section=${section}`);
+    const json = await apiGet(
+      `/students?className=${encodeURIComponent(className)}&section=${section}`,
+    );
     if (json.success) {
       setStudents(json.data);
       const defaults: Record<string, StatusValue> = {};
       json.data.forEach((s: Student) => (defaults[s._id] = "Present"));
 
       const existing = await apiGet(
-        `/attendance?className=${encodeURIComponent(className)}&section=${section}&date=${date}`
+        `/attendance?className=${encodeURIComponent(className)}&section=${section}&date=${date}`,
       );
       if (existing.success) {
         existing.data.forEach((rec: any) => {
@@ -109,7 +116,12 @@ export default function AttendancePage() {
   }
 
   const summary = useMemo(() => {
-    const counts: Record<StatusValue, number> = { Present: 0, Absent: 0, Late: 0, Informed: 0 };
+    const counts: Record<StatusValue, number> = {
+      Present: 0,
+      Absent: 0,
+      Late: 0,
+      Informed: 0,
+    };
     students.forEach((s) => {
       const status = statusMap[s._id];
       if (status) counts[status]++;
@@ -158,7 +170,9 @@ export default function AttendancePage() {
         {/* Filters */}
         <div className="mt-8 flex gap-4">
           <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-slate-600">Class</label>
+            <label className="mb-1 text-sm font-medium text-slate-600">
+              Class
+            </label>
             <select
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               value={className}
@@ -170,7 +184,9 @@ export default function AttendancePage() {
             </select>
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-slate-600">Section</label>
+            <label className="mb-1 text-sm font-medium text-slate-600">
+              Section
+            </label>
             <select
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               value={section}
@@ -188,8 +204,12 @@ export default function AttendancePage() {
           <div className="mt-8 flex gap-8 border-t border-b border-slate-200 py-5">
             {STATUS_OPTIONS.map((opt) => (
               <div key={opt}>
-                <p className={`text-2xl font-bold ${summaryColor[opt]}`}>{summary[opt]}</p>
-                <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">{opt}</p>
+                <p className={`text-2xl font-bold ${summaryColor[opt]}`}>
+                  {summary[opt]}
+                </p>
+                <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
+                  {opt}
+                </p>
               </div>
             ))}
           </div>
@@ -201,7 +221,8 @@ export default function AttendancePage() {
             <p className="text-slate-400">Loading roster...</p>
           ) : students.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-400">
-              No students in {className} - {section} yet. Try a different class or section.
+              No students in {className} - {section} yet. Try a different class
+              or section.
             </div>
           ) : (
             <>
@@ -210,13 +231,15 @@ export default function AttendancePage() {
                   <div
                     key={s._id}
                     className={`flex items-center justify-between px-6 py-4 ${
-                      i !== students.length - 1 ? "border-b border-slate-100" : ""
+                      i !== students.length - 1
+                        ? "border-b border-slate-100"
+                        : ""
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${avatarColor(
-                          s.name
+                          s.name,
                         )}`}
                       >
                         {initials(s.name)}
@@ -259,7 +282,11 @@ export default function AttendancePage() {
                 >
                   {saving ? "Saving..." : "Save Attendance"}
                 </button>
-                {saved && <span className="text-sm font-medium text-emerald-600">Saved ✓</span>}
+                {saved && (
+                  <span className="text-sm font-medium text-emerald-600">
+                    Saved ✓
+                  </span>
+                )}
               </div>
             </>
           )}
