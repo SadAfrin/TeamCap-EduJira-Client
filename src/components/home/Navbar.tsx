@@ -67,7 +67,7 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <div className="border-2 border-green-500 rounded-full">
+              <div className="border-2 w-8 border-green-500 rounded-full">
                 <Image
                   src={user?.image || "/profile.png"}
                   width={30}

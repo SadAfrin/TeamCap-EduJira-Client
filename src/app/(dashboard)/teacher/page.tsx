@@ -17,11 +17,16 @@ export default function TeacherDashboard() {
   if (isLoading || role !== "teacher") return null;
 
   return (
-    <div className="mx-auto max-w-5xl px-8 py-12">
-      <h1 style={{ fontFamily: "var(--font-fraunces)" }} className="text-3xl font-semibold text-slate-900">
+    <div className="mx-auto max-w-5xl min-h-screen px-8 py-12">
+      <h1
+        style={{ fontFamily: "var(--font-fraunces)" }}
+        className="text-3xl font-semibold text-slate-900"
+      >
         Teacher Dashboard
       </h1>
-      <p className="mt-2 text-slate-500">School-wide overview and management tools.</p>
+      <p className="mt-2 text-slate-500">
+        School-wide overview and management tools.
+      </p>
     </div>
   );
 }

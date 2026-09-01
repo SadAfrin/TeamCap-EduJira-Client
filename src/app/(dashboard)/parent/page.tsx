@@ -17,11 +17,16 @@ export default function ParentDashboard() {
   if (isLoading || role !== "parent") return null;
 
   return (
-    <div className="mx-auto max-w-5xl px-8 py-12">
-      <h1 style={{ fontFamily: "var(--font-fraunces)" }} className="text-3xl font-semibold text-slate-900">
+    <div className="mx-auto min-h-screen max-w-5xl px-8 py-12">
+      <h1
+        style={{ fontFamily: "var(--font-fraunces)" }}
+        className="text-3xl font-semibold text-slate-900"
+      >
         Parent Dashboard
       </h1>
-      <p className="mt-2 text-slate-500">School-wide overview and management tools.</p>
+      <p className="mt-2 text-slate-500">
+        School-wide overview and management tools.
+      </p>
     </div>
   );
 }

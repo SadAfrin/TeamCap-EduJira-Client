@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL as string;
+const BASE_URL = process.env.BETTER_AUTH_URL as string;
 
 export async function apiGet(path: string) {
   const res = await fetch(`${BASE_URL}${path}`);
