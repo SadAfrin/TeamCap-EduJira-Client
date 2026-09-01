@@ -59,7 +59,7 @@ function LoginContent() {
       // Handle success
       if (data) {
         toast.success("Welcome back!");
-        router.push(`/`);
+        router.push(`/calendar?role=${activeRole}`);
       }
     } catch (err: unknown) {
       const fallbackError = "An unexpected error occurred. Please try again.";
@@ -146,7 +146,7 @@ function LoginContent() {
                 Password
               </label>
               <Link
-                href="#"
+                href="/forget-password"
                 className="text-xs font-medium text-indigo-600 hover:text-indigo-500 hover:underline"
               >
                 Forgot password?
