@@ -37,6 +37,13 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-8 md:flex">
           <Link
+            href="/"
+            className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Home
+          </Link>
+          <Link
             href="/programs"
             className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
           >
@@ -61,6 +68,16 @@ export default function Navbar() {
           >
             About
           </Link>
+          {user ? (
+            <Link
+              href="/admin"
+              className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            ""
+          )}
         </nav>
 
         {/* Desktop Action Button & Mobile Toggle */}
@@ -149,6 +166,13 @@ export default function Navbar() {
         <div className="border-t border-slate-200 bg-white/95 px-6 py-6 backdrop-blur-md md:hidden">
           <nav className="flex flex-col gap-6">
             <Link
+              href="/"
+              className="text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-600"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
               href="/programs"
               className="text-lg font-semibold text-slate-900 transition-colors hover:text-indigo-600"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -176,6 +200,17 @@ export default function Navbar() {
             >
               About
             </Link>
+            {user ? (
+              <Link
+                href="/admin"
+                className="text-lg font-semibold text-slate-900 transition-colors hover:text-indigo-600"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+            ) : (
+              ""
+            )}
 
             <div className="mt-4 border-t border-slate-100 pt-6">
               <Link
