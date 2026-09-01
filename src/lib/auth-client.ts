@@ -6,7 +6,7 @@ export const authClient = createAuthClient({
     baseURL: process.env.BETTER_AUTH_URL,
     plugins: [
     // This tells the frontend to look at your backend auth.ts and inherit the 'role' field type
-    inferAdditionalFields<typeof auth>(),
+    // inferAdditionalFields<typeof auth>(),
   ],
 })
 
