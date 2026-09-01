@@ -59,7 +59,7 @@ function LoginContent() {
       // Handle success
       if (data) {
         toast.success("Welcome back!");
-        router.push(`/`);
+        router.push(`/calendar?role=${activeRole}`);
       }
     } catch (err: unknown) {
       const fallbackError = "An unexpected error occurred. Please try again.";
