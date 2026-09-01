@@ -4,7 +4,10 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { emailOTP } from "better-auth/plugins"; // 1. Import the OTP plugin
 import nodemailer from "nodemailer";
 
-const client = new MongoClient(`mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.pgvpsoy.mongodb.net/?appName=Cluster0`);
+const client = new MongoClient(`mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.7wzdopz.mongodb.net/?appName=Cluster0`);
+
+
+
 const db = client.db("EduJira");
 
 const transporter = nodemailer.createTransport({
