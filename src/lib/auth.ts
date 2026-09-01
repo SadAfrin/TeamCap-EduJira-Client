@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { emailOTP } from "better-auth/plugins"; // 1. Import the OTP plugin
 import nodemailer from "nodemailer";
 
 const client = new MongoClient(`mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.pgvpsoy.mongodb.net/?appName=Cluster0`);
@@ -29,6 +30,8 @@ export const auth = betterAuth({
     enabled: true, 
     requireEmailVerification: true,
   }, 
+  
+  // 2. This keeps your CLICKABLE LINKS for new sign-ups working perfectly!
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
@@ -48,5 +51,27 @@ export const auth = betterAuth({
       });
     },
   },
-  
+
+  // 3. This activates the 6-DIGIT OTP system strictly for password resets!
+  plugins: [
+    emailOTP({ 
+      async sendVerificationOTP({ email, otp, type }) { 
+        if (type === "forget-password") { 
+          await transporter.sendMail({
+            from: `"EduJira Support" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Your Password Reset Code",
+            html: `
+              <div style="font-family: sans-serif; padding: 20px; text-align: center;">
+                <h2>Password Reset</h2>
+                <p>Your 6-digit reset code is:</p>
+                <h1 style="letter-spacing: 6px; color: #4f46e5; font-size: 32px; background: #f8fafc; padding: 15px; border-radius: 8px; display: inline-block;">${otp}</h1>
+                <p style="font-size: 12px; color: #666; margin-top: 20px;">This code expires in 5 minutes. If you didn't request this, you can safely ignore this email.</p>
+              </div>
+            `,
+          });
+        } 
+      }, 
+    }) 
+  ]
 });
