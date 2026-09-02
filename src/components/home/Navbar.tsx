@@ -18,7 +18,7 @@ export default function Navbar() {
 
   const roleColor = ROLE_COLORS[userRole] || ROLE_COLORS.student;
   const roleLabel = ROLE_LABELS[userRole] || "Student";
-  const dashboardHref = `/${userRole}`;
+  const dashboardHref = `/dashboard/${userRole}`;
 
   if (isPending) {
     return (
