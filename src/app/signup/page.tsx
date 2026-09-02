@@ -24,27 +24,35 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     // 1. Validate all fields
     if (!name || !email || !imageUrl || !password || !confirmPassword) {
-      setError("Please fill in all fields to continue.");
+      const msg = "Please fill in all fields to continue.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match. Please try again.");
+      const msg = "Passwords do not match. Please try again.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      const msg = "Password must be at least 6 characters long.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     setError("");
+    setLoading(true);
 
     try {
       // 2. Send data to better-auth using your React state variables
@@ -59,12 +67,13 @@ export default function RegisterPage() {
       console.log("Signup response:", { data, error });
       // 3. Handle backend errors
       if (error) {
-        toast.error(error.message || "Error signing up");
+        const errorMsg = error.message || "Error signing up";
+        setError(errorMsg);
+        toast.error(errorMsg);
         return; // Stop here if it fails
       }
 
       // 4. Handle success and redirect
-      // Handle success
       if (data) {
         toast.success(
           "Account created! Please check your email to verify your account.",
@@ -73,10 +82,13 @@ export default function RegisterPage() {
         router.push("/login");
       }
     } catch (err: unknown) {
-      toast.error(
+      const fallbackError =
         (err as Error).message ||
-          "An unexpected error occurred. Please try again.",
-      );
+        "An unexpected error occurred. Please try again.";
+      setError(fallbackError);
+      toast.error(fallbackError);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -229,9 +241,12 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="mt-2 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            disabled={loading}
+            className="mt-2 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Register as {roles.find((r) => r.id === activeRole)?.label}
+            {loading
+              ? "Creating account..."
+              : `Register as ${roles.find((r) => r.id === activeRole)?.label}`}
           </button>
         </form>
 
