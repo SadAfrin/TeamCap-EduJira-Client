@@ -61,7 +61,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-7 md:flex">
           <Link
             href="/programs"
             className="text-sm font-medium text-slate-600 transition-colors hover:text-indigo-600"
@@ -86,6 +86,29 @@ export default function Navbar() {
           >
             About
           </Link>
+
+          {/* If Logged in, show direct Dashboard Link */}
+          {user && (
+            <Link
+              href={dashboardHref}
+              className="flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3.5 py-1.5 text-sm font-semibold text-indigo-700 transition-all hover:bg-indigo-100 hover:shadow-xs"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+                />
+              </svg>
+              <span>Dashboard</span>
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Action Buttons / Profile Section */}
@@ -108,7 +131,7 @@ export default function Navbar() {
                   />
                 </div>
                 <div className="flex items-center gap-2 text-left">
-                  <span className="max-w-30 truncate text-xs font-semibold text-slate-800">
+                  <span className="max-w-[120px] truncate text-xs font-semibold text-slate-800">
                     {user?.name || "User"}
                   </span>
                   <span
@@ -204,8 +227,57 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="border-t border-slate-200 bg-white/95 px-6 py-6 backdrop-blur-md md:hidden">
-          <nav className="flex flex-col gap-6">
+        <div className="border-t border-slate-200 bg-white px-6 py-6 shadow-xl md:hidden">
+          {user && (
+            <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="relative h-10 w-10 overflow-hidden rounded-full border border-indigo-200 bg-indigo-50">
+                  <Image
+                    src={user?.image || "/profile.png"}
+                    width={40}
+                    height={40}
+                    alt={user?.name || "User"}
+                    className="h-full w-full object-cover"
+                    unoptimized
+                  />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">{user?.name}</p>
+                  <p className="text-xs text-slate-500">{user?.email}</p>
+                </div>
+              </div>
+              <span
+                className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold uppercase ${roleColor.lightBg} ${roleColor.text} border ${roleColor.border}`}
+              >
+                {roleLabel}
+              </span>
+            </div>
+          )}
+
+          <nav className="flex flex-col gap-4">
+            {user && (
+              <Link
+                href={dashboardHref}
+                className="flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-3 text-base font-bold text-indigo-700 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+                  />
+                </svg>
+                <span>Go to {roleLabel} Dashboard</span>
+              </Link>
+            )}
+
             <Link
               href="/programs"
               className="text-base font-semibold text-slate-800 hover:text-indigo-600"
@@ -234,17 +306,6 @@ export default function Navbar() {
             >
               About
             </Link>
-            {user ? (
-              <Link
-                href="/admin"
-                className="text-lg font-semibold text-slate-900 transition-colors hover:text-indigo-600"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-            ) : (
-              ""
-            )}
 
             <div className="mt-2 border-t border-slate-100 pt-4">
               {user ? (
