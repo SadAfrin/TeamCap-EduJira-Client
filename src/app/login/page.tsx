@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const roles = [
-  { id: "admin", label: "Admin" },
   { id: "teacher", label: "Teacher" },
   { id: "student", label: "Student" },
   { id: "parent", label: "Parent" },
@@ -21,6 +21,7 @@ function LoginContent() {
   const [activeRole, setActiveRole] = useState<RoleId>("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -59,7 +60,8 @@ function LoginContent() {
       // Handle success
       if (data) {
         toast.success("Welcome back!");
-        router.push(`/${activeRole}`);
+        const userRole = (data as { user?: { role?: string } })?.user?.role || activeRole;
+        router.push(`/dashboard/${userRole}`);
         router.refresh();
       }
     } catch (err: unknown) {
@@ -101,7 +103,7 @@ function LoginContent() {
         </div>
 
         {/* Role Selector (Segmented Control Style) */}
-        <div className="mt-8 grid grid-cols-4 gap-2 rounded-xl bg-slate-100 p-1.5">
+        <div className="mt-8 grid grid-cols-3 gap-2 rounded-xl bg-slate-100 p-1.5">
           {roles.map((r) => (
             <button
               key={r.id}
@@ -153,14 +155,23 @@ function LoginContent() {
                 Forgot password?
               </Link>
             </div>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
           </div>
 
           {error && (
