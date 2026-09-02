@@ -131,7 +131,7 @@ export default function Navbar() {
                   />
                 </div>
                 <div className="flex items-center gap-2 text-left">
-                  <span className="max-w-[120px] truncate text-xs font-semibold text-slate-800">
+                  <span className="max-w-30 truncate text-xs font-semibold text-slate-800">
                     {user?.name || "User"}
                   </span>
                   <span
