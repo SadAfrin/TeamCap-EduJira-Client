@@ -3,8 +3,20 @@ import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { emailOTP } from "better-auth/plugins"; // 1. Import the OTP plugin
 import nodemailer from "nodemailer";
+import dns from "node:dns";
 
-const client = new MongoClient(`mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.7wzdopz.mongodb.net/?appName=Cluster0`);
+// Fix for Node.js SRV DNS resolution on Windows / MongoDB Atlas
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch {
+  // Ignore if DNS server configuration is restricted
+}
+
+const mongoURI =
+  process.env.MONGODB_URI ||
+  `mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@ac-ljjoee5-shard-00-00.7wzdopz.mongodb.net:27017,ac-ljjoee5-shard-00-01.7wzdopz.mongodb.net:27017,ac-ljjoee5-shard-00-02.7wzdopz.mongodb.net:27017/?ssl=true&replicaSet=atlas-une3pz-shard-0&authSource=admin&appName=Cluster0`;
+
+const client = new MongoClient(mongoURI);
 
 
 
