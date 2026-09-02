@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const { data: session, isPending } = authClient.useSession();
@@ -67,19 +68,21 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <div className="border-2 w-8 border-green-500 rounded-full">
+              <div className="border-2 w-8 h-8 border-green-500 rounded-full overflow-hidden flex items-center justify-center">
                 <Image
                   src={user?.image || "/profile.png"}
-                  width={30}
-                  height={30}
+                  width={32}
+                  height={32}
                   alt="userimage"
-                  className="rounded-full object-cover w-auto h-auto"
+                  className="rounded-full object-cover w-full h-full"
+                  unoptimized
                 />
               </div>
               <button
                 onClick={async () => {
                   await authClient.signOut();
-                  redirect("/");
+                  router.push("/");
+                  router.refresh();
                 }}
                 className="px-4 py-2 text-sm font-medium bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
               >
