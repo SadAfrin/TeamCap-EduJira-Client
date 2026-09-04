@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const roles = [
-  { id: "admin", label: "Admin" },
   { id: "teacher", label: "Teacher" },
   { id: "student", label: "Student" },
   { id: "parent", label: "Parent" },
@@ -23,28 +23,38 @@ export default function RegisterPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     // 1. Validate all fields
     if (!name || !email || !imageUrl || !password || !confirmPassword) {
-      setError("Please fill in all fields to continue.");
+      const msg = "Please fill in all fields to continue.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match. Please try again.");
+      const msg = "Passwords do not match. Please try again.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      const msg = "Password must be at least 6 characters long.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     setError("");
+    setLoading(true);
 
     try {
       // 2. Send data to better-auth using your React state variables
@@ -59,12 +69,13 @@ export default function RegisterPage() {
       console.log("Signup response:", { data, error });
       // 3. Handle backend errors
       if (error) {
-        toast.error(error.message || "Error signing up");
+        const errorMsg = error.message || "Error signing up";
+        setError(errorMsg);
+        toast.error(errorMsg);
         return; // Stop here if it fails
       }
 
       // 4. Handle success and redirect
-      // Handle success
       if (data) {
         toast.success(
           "Account created! Please check your email to verify your account.",
@@ -73,10 +84,13 @@ export default function RegisterPage() {
         router.push("/login");
       }
     } catch (err: unknown) {
-      toast.error(
+      const fallbackError =
         (err as Error).message ||
-          "An unexpected error occurred. Please try again.",
-      );
+        "An unexpected error occurred. Please try again.";
+      setError(fallbackError);
+      toast.error(fallbackError);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -112,7 +126,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Role Selector (Segmented Control Style) */}
-        <div className="mt-8 grid grid-cols-4 gap-2 rounded-xl bg-slate-100 p-1.5">
+        <div className="mt-8 grid grid-cols-3 gap-2 rounded-xl bg-slate-100 p-1.5">
           {roles.map((r) => (
             <button
               key={r.id}
@@ -191,14 +205,23 @@ export default function RegisterPage() {
             >
               Password
             </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
@@ -208,14 +231,23 @@ export default function RegisterPage() {
             >
               Confirm Password
             </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
-            />
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -229,9 +261,12 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="mt-2 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            disabled={loading}
+            className="mt-2 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Register as {roles.find((r) => r.id === activeRole)?.label}
+            {loading
+              ? "Creating account..."
+              : `Register as ${roles.find((r) => r.id === activeRole)?.label}`}
           </button>
         </form>
 
