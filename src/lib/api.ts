@@ -6,6 +6,7 @@ export async function apiGet(path: string) {
     const res = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) {
@@ -25,6 +26,7 @@ export async function apiPost(path: string, body: unknown) {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -44,6 +46,7 @@ export async function apiPut(path: string, body: unknown) {
     const res = await fetch(url, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -63,6 +66,7 @@ export async function apiDelete(path: string) {
     const res = await fetch(url, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));

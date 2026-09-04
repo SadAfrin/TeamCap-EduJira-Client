@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { featureFetch } from "@/lib/featureApi";
 
 interface LeaveRequest {
   _id: string;
@@ -44,7 +45,7 @@ export default function ParentLeavePage() {
 
   async function fetchRequests() {
     try {
-      const res = await fetch("/api/leave");
+      const res = await featureFetch("/api/leave");
       if (res.ok) {
         const data = await res.json();
         setRequests(data.data || []);
@@ -60,7 +61,7 @@ export default function ParentLeavePage() {
     if (!confirm("Are you sure you want to cancel this request?")) return;
 
     try {
-      const res = await fetch(`/api/leave/${id}`, { method: "DELETE" });
+      const res = await featureFetch(`/api/leave/${id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Leave request cancelled");
         setRequests(requests.filter((r) => r._id !== id));

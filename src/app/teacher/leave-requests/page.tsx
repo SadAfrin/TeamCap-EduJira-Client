@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { featureFetch } from "@/lib/featureApi";
 
 interface LeaveRequest {
   _id: string;
@@ -39,7 +40,7 @@ export default function TeacherLeaveRequestsPage() {
 
   async function fetchRequests() {
     try {
-      const res = await fetch(`/api/leave?status=${statusFilter}`);
+      const res = await featureFetch(`/api/leave?status=${statusFilter}`);
       if (res.ok) {
         const data = await res.json();
         setRequests(data.data || []);
@@ -58,9 +59,8 @@ export default function TeacherLeaveRequestsPage() {
     }
 
     try {
-      const res = await fetch(`/api/leave/${id}/review`, {
+      const res = await featureFetch(`/api/leave/${id}/review`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: reviewStatus,
           comments: reviewComments,

@@ -44,7 +44,7 @@ export default function ConversationPage() {
     if (!messageText.trim()) return;
 
     setSending(true);
-    const result = await sendMessage(messageText);
+    const result = await sendMessage(messageText, conversationId);
     setSending(false);
 
     if (result) {

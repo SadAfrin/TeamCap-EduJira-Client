@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { apiGet } from "@/lib/api";
+import { featureFetch } from "@/lib/featureApi";
 
 interface ChildOption {
   _id: string;
   name: string;
   studentId: string;
+  className?: string;
+  section?: string;
 }
 
 export default function ParentLeavePage() {
@@ -24,13 +28,42 @@ export default function ParentLeavePage() {
   const [documentPreview, setDocumentPreview] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [children, setChildren] = useState<ChildOption[]>([]);
-  const [loadingChildren, setLoadingChildren] = useState(false);
+  const [loadingChildren, setLoadingChildren] = useState(true);
 
-  // Redirect if not parent
-  if (!isLoading && (!isAuthenticated || role !== "parent")) {
-    router.push("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || role !== "parent")) {
+      router.push("/login");
+    }
+  }, [isLoading, isAuthenticated, role, router]);
+
+  useEffect(() => {
+    async function loadChildren() {
+      if (!user?.email) return;
+      try {
+        setLoadingChildren(true);
+        const res = await apiGet(
+          `/api/stats/parent-portal?email=${encodeURIComponent(user.email)}`
+        );
+        const list = (res?.data?.children || []) as ChildOption[];
+        setChildren(
+          list.map((c) => ({
+            _id: c._id,
+            name: c.name,
+            studentId: c.studentId,
+            className: c.className,
+            section: c.section,
+          }))
+        );
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load children");
+      } finally {
+        setLoadingChildren(false);
+      }
+    }
+
+    if (user?.email) loadChildren();
+  }, [user?.email]);
 
   if (isLoading) {
     return (
@@ -40,15 +73,15 @@ export default function ParentLeavePage() {
     );
   }
 
+  if (!isAuthenticated || role !== "parent") return null;
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         toast.error("File size must be less than 5MB");
         return;
       }
-
       setDocumentFile(file);
       setDocumentPreview(file.name);
     }
@@ -57,7 +90,6 @@ export default function ParentLeavePage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    // Validation
     if (!selectedChild) {
       toast.error("Please select a child");
       return;
@@ -83,14 +115,14 @@ export default function ParentLeavePage() {
     try {
       let documentUrl = "";
 
-      // Upload document if provided
       if (documentFile) {
         const formData = new FormData();
         formData.append("file", documentFile);
 
-        const uploadRes = await fetch("/api/upload", {
+        const uploadRes = await featureFetch("/api/upload", {
           method: "POST",
           body: formData,
+          headers: {},
         });
 
         if (!uploadRes.ok) {
@@ -101,10 +133,8 @@ export default function ParentLeavePage() {
         documentUrl = uploadData.fileUrl;
       }
 
-      // Submit leave request
-      const res = await fetch("/api/leave", {
+      const res = await featureFetch("/api/leave", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId: selectedChild,
           startDate,
@@ -140,34 +170,42 @@ export default function ParentLeavePage() {
             Submit Leave Request
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            Submit a leave request for your child. The request will be reviewed by their teacher and then by the administrator.
+            Submit a leave request for your child. The request will be reviewed by their teacher
+            and then by the administrator.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-10 space-y-8">
-          {/* Select Child */}
           <div>
-            <label className="block text-sm font-semibold text-slate-900">
-              Select Child
-            </label>
+            <label className="block text-sm font-semibold text-slate-900">Select Child</label>
             <select
               value={selectedChild}
               onChange={(e) => setSelectedChild(e.target.value)}
+              disabled={loadingChildren}
               className="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
             >
-              <option value="">Choose a child...</option>
-              {/* TODO: Fetch children for this parent */}
-              <option value="student1">Student 1 (Grade 8-A)</option>
-              <option value="student2">Student 2 (Grade 9-B)</option>
+              <option value="">
+                {loadingChildren ? "Loading children..." : "Choose a child..."}
+              </option>
+              {children.map((child) => (
+                <option key={child._id} value={child._id}>
+                  {child.name}
+                  {child.className
+                    ? ` (${child.className}${child.section ? `-${child.section}` : ""})`
+                    : ""}
+                </option>
+              ))}
             </select>
+            {!loadingChildren && children.length === 0 && (
+              <p className="mt-2 text-xs text-amber-600">
+                No linked children found for your account. Ask an admin to link a student.
+              </p>
+            )}
           </div>
 
-          {/* Date Range */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-semibold text-slate-900">
-                Start Date
-              </label>
+              <label className="block text-sm font-semibold text-slate-900">Start Date</label>
               <input
                 type="date"
                 value={startDate}
@@ -176,9 +214,7 @@ export default function ParentLeavePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-900">
-                End Date
-              </label>
+              <label className="block text-sm font-semibold text-slate-900">End Date</label>
               <input
                 type="date"
                 value={endDate}
@@ -188,7 +224,6 @@ export default function ParentLeavePage() {
             </div>
           </div>
 
-          {/* Reason */}
           <div>
             <label className="block text-sm font-semibold text-slate-900">
               Reason for Leave *
@@ -202,7 +237,6 @@ export default function ParentLeavePage() {
             />
           </div>
 
-          {/* File Upload */}
           <div>
             <label className="block text-sm font-semibold text-slate-900">
               Medical Certificate (Optional)
@@ -222,19 +256,6 @@ export default function ParentLeavePage() {
                 htmlFor="document-upload"
                 className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-6 py-4 text-center hover:bg-slate-50"
               >
-                <svg
-                  className="h-5 w-5 text-slate-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
                 <span className="text-sm font-medium text-slate-600">
                   {documentPreview || "Upload file"}
                 </span>
@@ -254,12 +275,11 @@ export default function ParentLeavePage() {
             </div>
           </div>
 
-          {/* Submit Button */}
           <div className="flex gap-4">
             <button
               type="submit"
-              disabled={submitting}
-              className="flex-1 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
+              disabled={submitting || loadingChildren}
+              className="flex-1 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md disabled:opacity-50"
             >
               {submitting ? "Submitting..." : "Submit Leave Request"}
             </button>

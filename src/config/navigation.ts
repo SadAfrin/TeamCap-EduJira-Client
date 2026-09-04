@@ -42,7 +42,7 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
     },
     {
       label: "Leave Management",
-      href: "/dashboard/admin/leaves",
+      href: "/admin/leave-requests",
       icon: "leaves",
       description: "Final approval/rejection of leave requests",
     },
@@ -83,13 +83,13 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
     },
     {
       label: "Parent Communication",
-      href: "/dashboard/teacher/messages",
+      href: "/messages",
       icon: "messages",
       description: "Direct messaging with parents",
     },
     {
       label: "Leave Requests",
-      href: "/dashboard/teacher/leaves",
+      href: "/teacher/leave-requests",
       icon: "leaves",
       description: "Review & approve student leave requests",
     },
@@ -170,9 +170,15 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
     },
     {
       label: "Leave Application",
-      href: "/dashboard/parent/leave-request",
+      href: "/parent/leave",
       icon: "leave-request",
       description: "Apply for child leave with attachment/doctor's note",
+    },
+    {
+      label: "Leave History",
+      href: "/parent/leave/list",
+      icon: "leaves",
+      description: "Track leave request status and comments",
     },
     {
       label: "Multilingual Notices",
@@ -183,7 +189,7 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
     },
     {
       label: "Teacher Communication",
-      href: "/dashboard/parent/messages",
+      href: "/messages",
       icon: "messages",
       description: "Message subject and class teachers",
     },

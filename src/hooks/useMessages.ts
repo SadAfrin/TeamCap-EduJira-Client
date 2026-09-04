@@ -1,8 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   initializeSocket,
-  getSocket,
-  joinConversation,
   onNewMessage,
   onMessageRead,
   onUserTyping,
@@ -10,6 +8,7 @@ import {
   markAsReadViaSocket,
   offEvent,
 } from "@/lib/socket";
+import { featureFetch } from "@/lib/featureApi";
 
 interface Message {
   _id: string;
@@ -37,11 +36,10 @@ export function useMessages(userId: string | undefined) {
   const [loading, setLoading] = useState(false);
   const [socketReady, setSocketReady] = useState(false);
 
-  // Initialize socket
   useEffect(() => {
     if (!userId) return;
 
-    const socket = initializeSocket(userId);
+    initializeSocket(userId);
     setSocketReady(true);
 
     return () => {
@@ -52,16 +50,28 @@ export function useMessages(userId: string | undefined) {
     };
   }, [userId]);
 
-  // Set up socket event listeners
   useEffect(() => {
     if (!socketReady) return;
 
-    // Listen for new messages
     onNewMessage((data) => {
-      setMessages((prev) => [...prev, data]);
+      setMessages((prev) => {
+        const id = data._id || data.messageId;
+        if (prev.some((m) => m._id === id)) return prev;
+        return [
+          ...prev,
+          {
+            _id: id,
+            conversationId: data.conversationId,
+            senderId: data.senderId,
+            recipientId: data.recipientId,
+            content: data.content,
+            isRead: data.isRead ?? false,
+            createdAt: data.createdAt,
+          },
+        ];
+      });
     });
 
-    // Listen for message read receipts
     onMessageRead((data) => {
       setMessages((prev) =>
         prev.map((msg) =>
@@ -70,25 +80,22 @@ export function useMessages(userId: string | undefined) {
       );
     });
 
-    // Listen for typing indicators
     onUserTyping((data) => {
       setTypingUsers((prev) => new Set(prev).add(data.senderId));
     });
 
-    // Listen for stop typing
     onUserStoppedTyping((data) => {
       setTypingUsers((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(data.senderId);
-        return newSet;
+        const next = new Set(prev);
+        next.delete(data.senderId);
+        return next;
       });
     });
   }, [socketReady]);
 
-  // Fetch conversations
   const fetchConversations = useCallback(async () => {
     try {
-      const res = await fetch("/api/messages/conversations");
+      const res = await featureFetch("/api/messages/conversations");
       if (res.ok) {
         const data = await res.json();
         setConversations(data.data || []);
@@ -98,35 +105,31 @@ export function useMessages(userId: string | undefined) {
     }
   }, []);
 
-  // Fetch messages for a conversation
-  const fetchMessages = useCallback(
-    async (conversationId: string, page = 1) => {
-      try {
-        setLoading(true);
-        const res = await fetch(
-          `/api/messages/conversations/${conversationId}/messages?page=${page}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setMessages(data.data || []);
-          joinConversation(conversationId);
-        }
-      } catch (error) {
-        console.error("Failed to fetch messages:", error);
-      } finally {
-        setLoading(false);
+  const fetchMessages = useCallback(async (conversationId: string, page = 1) => {
+    try {
+      setLoading(true);
+      setSelectedConversation(conversationId);
+      const res = await featureFetch(
+        `/api/messages/conversations/${conversationId}/messages?page=${page}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.data || []);
+        const { joinConversation } = await import("@/lib/socket");
+        joinConversation(conversationId);
       }
-    },
-    []
-  );
+    } catch (error) {
+      console.error("Failed to fetch messages:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // Start or get conversation
   const startConversation = useCallback(
     async (recipientId: string, studentId?: string) => {
       try {
-        const res = await fetch("/api/messages/conversation/start", {
+        const res = await featureFetch("/api/messages/conversation/start", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipientId, studentId }),
         });
 
@@ -145,24 +148,26 @@ export function useMessages(userId: string | undefined) {
     [fetchMessages, fetchConversations]
   );
 
-  // Send message
   const sendMessage = useCallback(
-    async (content: string) => {
-      if (!selectedConversation || !content.trim()) return;
+    async (content: string, conversationId?: string) => {
+      const targetId = conversationId || selectedConversation;
+      if (!targetId || !content.trim()) return null;
 
       try {
-        const res = await fetch("/api/messages", {
+        const res = await featureFetch("/api/messages", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            conversationId: selectedConversation,
+            conversationId: targetId,
             content: content.trim(),
           }),
         });
 
         if (res.ok) {
           const data = await res.json();
-          setMessages((prev) => [...prev, data.data]);
+          setMessages((prev) => {
+            if (prev.some((m) => m._id === data.data._id)) return prev;
+            return [...prev, data.data];
+          });
           return data.data;
         }
       } catch (error) {
@@ -173,10 +178,16 @@ export function useMessages(userId: string | undefined) {
     [selectedConversation]
   );
 
-  // Mark message as read
-  const markMessageRead = useCallback((messageId: string) => {
-    markAsReadViaSocket({ messageId, conversationId: selectedConversation || "", senderId: userId || "" });
-  }, [selectedConversation, userId]);
+  const markMessageRead = useCallback(
+    (messageId: string) => {
+      markAsReadViaSocket({
+        messageId,
+        conversationId: selectedConversation || "",
+        senderId: userId || "",
+      });
+    },
+    [selectedConversation, userId]
+  );
 
   return {
     conversations,
