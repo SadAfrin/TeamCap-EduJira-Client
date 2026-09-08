@@ -51,9 +51,9 @@ export default function StudentAssignmentsPage() {
     setSubmitting(true);
     try {
       const res = await apiPost(`/api/assignments/${selectedAssignment._id}/submit`, {
-        studentId: "STD-801",
-        studentName: user?.name || "Rahim Uddin",
-        studentEmail: user?.email || "rahim@edujira.edu",
+        studentId: (user as any)?.studentId || "STD-801",
+        studentName: user?.name || "Student",
+        studentEmail: user?.email || "",
         submissionText,
         fileUrl,
       });

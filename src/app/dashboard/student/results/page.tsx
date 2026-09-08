@@ -2,17 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 export default function StudentResultsPage() {
+  const { user } = useAuthRole();
   const [term, setTerm] = useState("Mid Term");
   const [transcriptData, setTranscriptData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const studentName = user?.name || "Student";
+  const studentId = (user as any)?.studentId || "STD-801";
 
   useEffect(() => {
     async function loadTranscript() {
       try {
         setLoading(true);
-        const res = await apiGet(`/api/results/transcript?studentId=STD-801&term=${term}`);
+        const res = await apiGet(`/api/results/transcript?studentId=${encodeURIComponent(studentId)}&term=${term}`);
         if (res.success) {
           setTranscriptData(res.data);
         }
@@ -23,7 +28,7 @@ export default function StudentResultsPage() {
       }
     }
     loadTranscript();
-  }, [term]);
+  }, [term, studentId]);
 
   const handlePrint = () => {
     window.print();
@@ -37,7 +42,7 @@ export default function StudentResultsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 print:hidden">
         <div>
           <h1 className="text-2xl font-black text-slate-900">Academic Results & Transcripts</h1>
-          <p className="text-xs text-slate-500 mt-1">Class 8 • Roll #01 • Student ID: STD-801</p>
+          <p className="text-xs text-slate-500 mt-1">Class 8 • Roll #01 • Student: {studentName}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -85,7 +90,7 @@ export default function StudentResultsPage() {
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 rounded-2xl bg-slate-50 p-4 border border-slate-100 text-xs">
           <div>
             <span className="text-slate-400 block font-medium">Student Name</span>
-            <span className="font-bold text-slate-900">Rahim Uddin</span>
+            <span className="font-bold text-slate-900">{studentName}</span>
           </div>
           <div>
             <span className="text-slate-400 block font-medium">Class & Section</span>

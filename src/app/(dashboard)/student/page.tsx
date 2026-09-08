@@ -26,9 +26,9 @@ export default function StudentDashboard() {
       try {
         setLoading(true);
         const [statsRes, noticesRes, assignRes, routineRes] = await Promise.all([
-          apiGet(`/api/stats/student-portal?email=${encodeURIComponent(user?.email || "")}`),
+          apiGet(`/api/stats/student-portal?email=${encodeURIComponent(user?.email || "")}&name=${encodeURIComponent(user?.name || "")}`),
           apiGet(`/api/notices?role=student&limit=3`),
-          apiGet(`/api/assignments?className=Class 8&studentId=STD-801`),
+          apiGet(`/api/assignments?className=Class 8&studentId=${encodeURIComponent(user?.id || "STD-801")}`),
           apiGet(`/api/routines?className=Class 8&section=B&day=Sunday`),
         ]);
 
@@ -49,15 +49,15 @@ export default function StudentDashboard() {
     }
   }, [role, user]);
 
-  const student = studentData?.student || {
-    studentId: "STD-801",
-    name: user?.name || "Rahim Uddin",
-    className: "Class 8",
-    section: "B",
-    roll: "01",
+  const student = {
+    studentId: studentData?.student?.studentId || "STD-801",
+    name: user?.name || studentData?.student?.name || "Student",
+    className: studentData?.student?.className || "Class 8",
+    section: studentData?.student?.section || "B",
+    roll: studentData?.student?.roll || "01",
   };
 
-  const attendancePercent = studentData?.attendancePercentage ?? 94;
+  const attendancePercent = studentData?.attendancePercentage ?? 100;
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">

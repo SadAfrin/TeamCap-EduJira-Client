@@ -43,9 +43,9 @@ export default function StudentLeavesPage() {
     setSubmitting(true);
     try {
       const res = await apiPost("/api/leaves", {
-        studentId: "STD-801",
-        studentName: user?.name || "Rahim Uddin",
-        studentEmail: user?.email || "rahim@edujira.edu",
+        studentId: (user as any)?.studentId || "STD-801",
+        studentName: user?.name || "Student",
+        studentEmail: user?.email || "",
         className: "Class 8",
         section: "B",
         requestedBy: "student",
