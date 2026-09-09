@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiGet } from "@/lib/api";
 import toast from "react-hot-toast";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
@@ -16,6 +17,21 @@ export default function RoutineManagerPage() {
   const [selectedClass, setSelectedClass] = useState("Class 8");
   const [selectedSection, setSelectedSection] = useState("B");
   const [autoOptimizing, setAutoOptimizing] = useState(false);
+  const [resourcePlan, setResourcePlan] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadResourcePlan() {
+      try {
+        const res = await apiGet("/api/ai/resource-plan");
+        if (res.success) {
+          setResourcePlan(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load resource plan:", err);
+      }
+    }
+    loadResourcePlan();
+  }, []);
 
   function handleAutoOptimize() {
     setAutoOptimizing(true);
@@ -29,7 +45,12 @@ export default function RoutineManagerPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Institutional Routine & Timetable Manager</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-slate-900">Institutional Routine & Resource Allocator</h1>
+            <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200">
+              AI Powered
+            </span>
+          </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Automated classroom, teacher, and schedule allocation planner with conflict resolution.
           </p>
@@ -38,11 +59,43 @@ export default function RoutineManagerPage() {
         <button
           onClick={handleAutoOptimize}
           disabled={autoOptimizing}
-          className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 disabled:opacity-50"
         >
           <span>⚡ {autoOptimizing ? "Optimizing..." : "AI Auto-Allocate Routine"}</span>
         </button>
       </div>
+
+      {/* AI Resource & Classroom Allocation Planner Section */}
+      {resourcePlan && (
+        <div className="rounded-3xl border border-indigo-100 bg-linear-to-r from-indigo-900 via-slate-900 to-indigo-950 p-6 text-white shadow-lg space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-300 border border-indigo-400/30">
+                Resource & Classroom Allocation Planner
+              </span>
+              <span className="text-xs text-indigo-200">
+                Optimization Score: <strong className="text-emerald-400">{resourcePlan.optimizationScore}/100</strong>
+              </span>
+            </div>
+            <span className="text-xs text-slate-300 hidden sm:inline">{resourcePlan.summary}</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {resourcePlan.suggestions?.map((item: any, idx: number) => (
+              <div key={idx} className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="rounded bg-indigo-400/20 px-2 py-0.5 text-[10px] font-bold text-indigo-200">
+                    {item.type}
+                  </span>
+                  <span className="text-[10px] text-amber-300 font-bold uppercase">{item.priority}</span>
+                </div>
+                <h4 className="font-bold text-xs text-white">{item.subject}</h4>
+                <p className="text-[11px] text-slate-300 leading-relaxed">{item.recommendation}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Selector */}
       <div className="flex flex-wrap gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs">
@@ -51,7 +104,7 @@ export default function RoutineManagerPage() {
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-800"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-800 outline-none focus:bg-white focus:border-indigo-600"
           >
             {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -64,7 +117,7 @@ export default function RoutineManagerPage() {
           <select
             value={selectedSection}
             onChange={(e) => setSelectedSection(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-800"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-800 outline-none focus:bg-white focus:border-indigo-600"
           >
             {["A", "B", "C"].map((s) => (
               <option key={s} value={s}>Section {s}</option>
