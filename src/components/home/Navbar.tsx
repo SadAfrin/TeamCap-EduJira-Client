@@ -3,16 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/constants";
 import { Role } from "@/hooks/useAuthRole";
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const { data: session, isPending } = authClient.useSession();
+
+  // Do not render public Navbar on dashboard pages
+  if (pathname?.startsWith("/dashboard")) {
+    return null;
+  }
+
   const user = session?.user as (typeof session & { role?: Role; image?: string; name?: string; email?: string }) | undefined;
   const userRole = (user?.role as Role) || "student";
 

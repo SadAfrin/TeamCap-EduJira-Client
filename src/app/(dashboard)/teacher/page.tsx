@@ -10,11 +10,13 @@ export default function TeacherDashboard() {
   const { role, user, isLoading } = useAuthRole();
   const router = useRouter();
   const [portalData, setPortalData] = useState<any>(null);
+  const [earlyWarnings, setEarlyWarnings] = useState<any[]>([]);
+  const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoading && role && role !== "teacher") {
-      router.push(`/${role}`);
+      router.push(`/dashboard/${role}`);
     }
   }, [isLoading, role, router]);
 
@@ -22,81 +24,95 @@ export default function TeacherDashboard() {
     async function loadData() {
       try {
         setLoading(true);
-        const res = await apiGet(`/api/stats/teacher-portal?email=${encodeURIComponent(user?.email || "")}`);
-        if (res.success) {
-          setPortalData(res.data);
-        }
+        const [statsRes, warningsRes, leavesRes] = await Promise.all([
+          apiGet(`/api/stats/teacher-portal?email=${encodeURIComponent(user?.email || "")}`),
+          apiGet(`/api/ai/early-warning?status=active`),
+          apiGet(`/api/leaves?status=pending`),
+        ]);
+
+        if (statsRes.success) setPortalData(statsRes.data);
+        if (warningsRes.success) setEarlyWarnings(warningsRes.data?.slice(0, 3) || []);
+        if (leavesRes.success) setPendingLeaves(leavesRes.data?.slice(0, 3) || []);
       } catch (err) {
         console.error("Failed to load teacher portal data:", err);
       } finally {
         setLoading(false);
       }
     }
-    if (role === "teacher") {
+    if (role === "teacher" || !role) {
       loadData();
     }
   }, [role, user]);
 
-  if (isLoading || role !== "teacher") return null;
-
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       {/* Teacher Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-900 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white shadow-xl shadow-blue-950/10">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-blue-950 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl shadow-blue-950/10">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-300 backdrop-blur-md border border-blue-400/30">
-                Teacher & Faculty Portal
+                Teacher & Faculty Workspace
               </span>
-              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs text-slate-300">Class In Session</span>
+              <span className="text-xs text-slate-300">• Class in Session</span>
             </div>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
-              Hello, {user?.name || "Teacher"}! 👨‍🏫
+            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Welcome, {user?.name || "Dr. Anisur Rahman"}! 👨‍🏫
             </h1>
             <p className="mt-1 text-sm text-slate-300 max-w-xl">
-              Track your assigned classrooms, mark attendance in one click, and manage student performance.
+              Take daily digital attendance, enter marks with AI automated narrative comments, review student leaves, and communicate with parents.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <Link
-              href="/attendance"
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-blue-700/30 transition-all hover:bg-blue-500"
+              href="/dashboard/teacher/attendance"
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-all"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Take Daily Attendance</span>
+              <span>✓ Take Daily Attendance</span>
             </Link>
             <Link
-              href="/timetable"
-              className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20 border border-white/15"
+              href="/dashboard/teacher/grades"
+              className="flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-600/30 hover:bg-purple-500 transition-all"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>View Timetable</span>
+              <span>📊 Result & AI Narratives</span>
             </Link>
           </div>
         </div>
+      </div>
 
-        {/* Decorative Glow */}
-        <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+      {/* Quick Action Matrix */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          { label: "Digital Attendance", icon: "📋", href: "/dashboard/teacher/attendance", color: "hover:border-blue-300" },
+          { label: "My Classes", icon: "🏫", href: "/dashboard/teacher/classes", color: "hover:border-emerald-300" },
+          { label: "Grade Entry (AI)", icon: "🎯", href: "/dashboard/teacher/grades", color: "hover:border-purple-300" },
+          { label: "Assignments", icon: "📝", href: "/dashboard/teacher/assignments", color: "hover:border-indigo-300" },
+          { label: "Leave Requests", icon: "✉️", href: "/dashboard/teacher/leaves", color: "hover:border-amber-300" },
+          { label: "Parent Messages", icon: "💬", href: "/dashboard/teacher/messages", color: "hover:border-rose-300" },
+        ].map((item, idx) => (
+          <Link
+            key={idx}
+            href={item.href}
+            className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md ${item.color}`}
+          >
+            <span className="text-2xl mb-1">{item.icon}</span>
+            <span className="text-xs font-bold text-slate-800 text-center">{item.label}</span>
+          </Link>
+        ))}
       </div>
 
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Assigned Classrooms</span>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">{portalData?.assignedClasses?.length ?? 3}</span>
-            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">Classes</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Assigned Classes</span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-black text-slate-900">{portalData?.assignedClasses?.length ?? 3}</span>
+            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Active</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {portalData?.assignedClasses?.map((c: string) => (
-              <span key={c} className="rounded bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700">
+            {(portalData?.assignedClasses || ["Class 8-A", "Class 8-B", "Class 9-A"]).map((c: string) => (
+              <span key={c} className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700 border border-blue-100">
                 {c}
               </span>
             ))}
@@ -104,116 +120,92 @@ export default function TeacherDashboard() {
         </div>
 
         <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Supervised Students</span>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">{portalData?.totalStudentsAssigned ?? 25}</span>
-            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Students</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Students Supervised</span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-black text-slate-900">{portalData?.totalStudentsAssigned ?? 25}</span>
+            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Enrolled</span>
           </div>
-          <p className="mt-2 text-xs text-slate-500">Active across your assigned divisions</p>
+          <p className="mt-2 text-xs text-slate-500">Class 8 & Class 9 Divisions</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">My Subjects</span>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">{portalData?.subjects?.length ?? 4}</span>
-            <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">Curriculums</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Pending Actions</span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-black text-amber-600">{pendingLeaves.length + earlyWarnings.length}</span>
+            <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">Requires Review</span>
           </div>
-          <p className="mt-2 text-xs text-slate-500">Physics, General Science, Mathematics</p>
+          <p className="mt-2 text-xs text-slate-500">{pendingLeaves.length} leaves, {earlyWarnings.length} at-risk alerts</p>
         </div>
       </div>
 
-      {/* Main Grid: Today's Routine + Student Roster */}
+      {/* Grid: At-risk Alert Banner + Today Schedule */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Today's Teaching Schedule */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs">
+        {/* At Risk Alert Card (AI Early Warning) */}
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-6 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">Today's Class Routine</h2>
-            <span className="text-xs font-bold text-blue-600">3 Sessions</span>
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping" />
+              <h3 className="font-extrabold text-rose-900 text-sm">AI Early Warning Alerts</h3>
+            </div>
+            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-800">
+              {earlyWarnings.length} Flagged
+            </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">Schedule for Wednesday</p>
+          <p className="text-xs text-rose-700">Students with low attendance or failing grade patterns:</p>
 
-          <div className="mt-5 space-y-3.5">
-            {[
-              { time: "09:00 AM - 09:45 AM", subject: "Physics", classInfo: "Class 9 - Sec A", room: "Room 301", current: true },
-              { time: "10:30 AM - 11:15 AM", subject: "General Science", classInfo: "Class 8 - Sec B", room: "Room 201", current: false },
-              { time: "01:30 PM - 02:15 PM", subject: "Higher Math Lab", classInfo: "Class 10 - Sec A", room: "Lab 2", current: false },
-            ].map((slot, idx) => (
-              <div
-                key={idx}
-                className={`rounded-xl p-3.5 border transition-all ${
-                  slot.current
-                    ? "border-blue-300 bg-blue-50/70 shadow-xs"
-                    : "border-slate-200 bg-slate-50/50"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900">{slot.subject}</span>
-                  <span className="font-mono text-[11px] font-semibold text-slate-500">{slot.time}</span>
+          <div className="space-y-2 mt-3">
+            {earlyWarnings.length > 0 ? (
+              earlyWarnings.map((flag) => (
+                <div key={flag._id} className="rounded-xl border border-rose-200 bg-white p-3 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900">{flag.studentName}</span>
+                    <span className="rounded bg-rose-100 px-1.5 py-0.2 text-[9px] font-bold uppercase text-rose-800">
+                      {flag.riskLevel}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-1">
+                    {flag.reasons?.join(", ") || "Attendance rate below 75%"}
+                  </p>
                 </div>
-                <div className="mt-1.5 flex items-center justify-between text-xs text-slate-600">
-                  <span className="font-medium text-blue-700">{slot.classInfo}</span>
-                  <span className="text-[11px] text-slate-400">{slot.room}</span>
-                </div>
+              ))
+            ) : (
+              <div className="rounded-xl bg-white p-4 text-center text-xs text-slate-500 border border-rose-100">
+                No active critical risk flags.
               </div>
-            ))}
-          </div>
-
-          <div className="mt-5 pt-4 border-t border-slate-100">
-            <Link
-              href="/timetable"
-              className="flex w-full items-center justify-center gap-1 rounded-xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
-            >
-              View Full Week Timetable →
-            </Link>
+            )}
           </div>
         </div>
 
-        {/* Assigned Students Roster */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs lg:col-span-2">
+        {/* Today's Teaching Schedule */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Students in Your Classes</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Quick roster across Class 8 and Class 9</p>
-            </div>
-            <Link
-              href="/attendance"
-              className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200"
-            >
+            <h2 className="text-base font-bold text-slate-900">Today's Class Schedule</h2>
+            <Link href="/dashboard/teacher/attendance" className="text-xs font-bold text-blue-600 hover:underline">
               Take Attendance →
             </Link>
           </div>
 
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[11px]">
-                  <th className="pb-3 font-semibold">Student ID</th>
-                  <th className="pb-3 font-semibold">Name</th>
-                  <th className="pb-3 font-semibold">Class</th>
-                  <th className="pb-3 font-semibold">Roll</th>
-                  <th className="pb-3 font-semibold">Parent Contact</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {portalData?.students && portalData.students.length > 0 ? (
-                  portalData.students.slice(0, 7).map((st: any) => (
-                    <tr key={st.studentId} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 font-mono font-bold text-blue-700">{st.studentId}</td>
-                      <td className="py-3 font-medium text-slate-900">{st.name}</td>
-                      <td className="py-3 font-semibold text-slate-700">{st.className} - {st.section}</td>
-                      <td className="py-3 font-mono text-slate-500">#{st.roll || "—"}</td>
-                      <td className="py-3 text-slate-500">{st.parentPhone || st.parentName || "—"}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-6 text-center text-slate-400">
-                      No student records available.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {[
+              { time: "09:00 AM - 09:45 AM", subject: "Mathematics", classInfo: "Class 8 - Sec B", room: "Room 201" },
+              { time: "10:40 AM - 11:25 AM", subject: "General Science", classInfo: "Class 8 - Sec B", room: "Room 201" },
+              { time: "01:30 PM - 02:15 PM", subject: "Physics", classInfo: "Class 9 - Sec A", room: "Room 301" },
+            ].map((slot, idx) => (
+              <div key={idx} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900">{slot.subject}</span>
+                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                      {slot.classInfo}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">{slot.room}</p>
+                </div>
+                <span className="font-mono text-xs font-semibold text-slate-600 bg-white px-2.5 py-1 rounded-md border border-slate-200">
+                  {slot.time}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

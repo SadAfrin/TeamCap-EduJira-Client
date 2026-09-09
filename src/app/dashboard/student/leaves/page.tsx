@@ -5,7 +5,7 @@ import { apiGet, apiPost } from "@/lib/api";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import toast from "react-hot-toast";
 
-export default function ParentLeaveRequestPage() {
+export default function StudentLeavesPage() {
   const { user } = useAuthRole();
   const [leaves, setLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,13 +43,12 @@ export default function ParentLeaveRequestPage() {
     setSubmitting(true);
     try {
       const res = await apiPost("/api/leaves", {
-        studentId: "STD-801",
-        studentName: "Rahim Uddin",
+        studentId: (user as any)?.studentId || "STD-801",
+        studentName: user?.name || "Student",
+        studentEmail: user?.email || "",
         className: "Class 8",
         section: "B",
-        requestedBy: "parent",
-        parentName: user?.name || "Tariqul Islam",
-        parentEmail: user?.email || "tariqul.parent@edujira.edu",
+        requestedBy: "student",
         startDate,
         endDate,
         reason,
@@ -57,7 +56,7 @@ export default function ParentLeaveRequestPage() {
       });
 
       if (res.success) {
-        toast.success("Leave application submitted for child! ✓");
+        toast.success("Leave application submitted for teacher/admin review!");
         setStartDate("");
         setEndDate("");
         setReason("");
@@ -76,25 +75,15 @@ export default function ParentLeaveRequestPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-slate-900">Child Leave Applications</h1>
-        <p className="text-xs text-slate-500 mt-1">Submit excused medical and family leaves for your child</p>
+        <h1 className="text-2xl font-black text-slate-900">Leave Applications</h1>
+        <p className="text-xs text-slate-500 mt-1">Submit excused absence requests with medical notes</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Submit Form */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs h-fit">
-          <h3 className="font-bold text-slate-900 text-sm mb-4">Apply for Child Leave</h3>
+          <h3 className="font-bold text-slate-900 text-sm mb-4">Apply for Leave</h3>
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Child</label>
-              <input
-                type="text"
-                disabled
-                value="Rahim Uddin (Class 8 – Sec B)"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700"
-              />
-            </div>
-
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Start Date *</label>
               <input
@@ -124,7 +113,7 @@ export default function ParentLeaveRequestPage() {
                 required
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Medical reason, family event, etc..."
+                placeholder="e.g. Viral fever / Family emergency..."
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs"
               />
             </div>
@@ -135,7 +124,7 @@ export default function ParentLeaveRequestPage() {
                 type="url"
                 value={doctorNoteUrl}
                 onChange={(e) => setDoctorNoteUrl(e.target.value)}
-                placeholder="https://example.com/prescription.pdf"
+                placeholder="https://example.com/medical-certificate.pdf"
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs"
               />
             </div>
@@ -143,16 +132,16 @@ export default function ParentLeaveRequestPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-xl bg-amber-600 py-2.5 text-xs font-bold text-white hover:bg-amber-500 shadow-md shadow-amber-600/20 disabled:opacity-50 mt-2"
+              className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20 disabled:opacity-50 mt-2"
             >
-              {submitting ? "Submitting..." : "Submit Leave Application"}
+              {submitting ? "Submitting..." : "Submit Leave Request"}
             </button>
           </form>
         </div>
 
         {/* History Table */}
         <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-          <h3 className="font-bold text-slate-900 text-sm mb-4">Leave Application Records & Approval Status</h3>
+          <h3 className="font-bold text-slate-900 text-sm mb-4">Application History & Review Status</h3>
 
           {loading ? (
             <p className="text-xs text-slate-400 py-8 text-center">Loading applications...</p>
@@ -184,7 +173,7 @@ export default function ParentLeaveRequestPage() {
 
                   {item.reviewRemarks && (
                     <p className="text-[11px] text-slate-500 mt-2 pt-2 border-t border-slate-200/60">
-                      <strong>Teacher/Admin Remarks: </strong> {item.reviewRemarks} (Reviewed by {item.reviewedBy || "Class Teacher"})
+                      <strong>Remarks: </strong> {item.reviewRemarks} (Reviewed by {item.reviewedBy || "Staff"})
                     </p>
                   )}
                 </div>
