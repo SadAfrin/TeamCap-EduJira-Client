@@ -46,6 +46,12 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       icon: "leaves",
       description: "Final approval/rejection of leave requests",
     },
+    {
+      label: "My Profile",
+      href: "/dashboard/admin/profile",
+      icon: "profile",
+      description: "Admin credentials & institutional info",
+    },
   ],
 
   [UserRole.TEACHER]: [
@@ -93,6 +99,12 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       icon: "leaves",
       description: "Review & approve student leave requests",
     },
+    {
+      label: "My Profile",
+      href: "/dashboard/teacher/profile",
+      icon: "profile",
+      description: "Teacher details, subjects & bio",
+    },
   ],
 
   [UserRole.STUDENT]: [
@@ -101,6 +113,12 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       href: "/dashboard/student",
       icon: "overview",
       description: "Personal summary, upcoming tests, attendance rate",
+    },
+    {
+      label: "My Profile",
+      href: "/dashboard/student/profile",
+      icon: "profile",
+      description: "View & edit student personal details",
     },
     {
       label: "My Attendance",
@@ -139,6 +157,12 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       icon: "career",
       badge: "Growth",
       description: "AI-based skill growth and career insights",
+    },
+    {
+      label: "Leave Application",
+      href: "/dashboard/student/leaves",
+      icon: "leaves",
+      description: "Submit leave request with doctor's note",
     },
   ],
 
@@ -186,6 +210,12 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       href: "/dashboard/parent/messages",
       icon: "messages",
       description: "Message subject and class teachers",
+    },
+    {
+      label: "My Profile",
+      href: "/dashboard/parent/profile",
+      icon: "profile",
+      description: "Guardian details & children info",
     },
   ],
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const footerLinks = {
   Product: [
@@ -67,6 +68,13 @@ const socialLinks = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // Do not render public Footer on dashboard pages
+  if (pathname?.startsWith("/dashboard")) {
+    return null;
+  }
+
   return (
     <footer className="relative overflow-hidden border-t border-slate-200 bg-slate-900">
       {/* Decorative gradient blob */}
