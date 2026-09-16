@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -15,12 +15,21 @@ const roles = [
 
 type RoleId = (typeof roles)[number]["id"];
 
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+
 export default function RegisterPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string>("");
+
   const [activeRole, setActiveRole] = useState<RoleId>("student");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -28,12 +37,87 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, []);
+
+  function applySelectedFile(file: File | undefined) {
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      const msg = "Please choose a JPG, PNG, WEBP, or GIF image.";
+      setImageError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_BYTES) {
+      const msg = "Image must be 2MB or smaller.";
+      setImageError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    const preview = URL.createObjectURL(file);
+    previewUrlRef.current = preview;
+    setImageFile(file);
+    setImagePreview(preview);
+    setImageError("");
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    applySelectedFile(e.target.files?.[0]);
+    e.target.value = "";
+  }
+
+  function handleRemoveImage() {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = "";
+    setImageFile(null);
+    setImagePreview("");
+    setImageError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    applySelectedFile(e.dataTransfer.files?.[0]);
+  }
+
+  async function uploadProfileImage(file: File): Promise<string | null> {
+    const body = new FormData();
+    body.append("file", file);
+
+    const res = await fetch("/api/upload/image", {
+      method: "POST",
+      body,
+    });
+    const payload = await res.json().catch(() => ({}));
+
+    if (!res.ok || !payload?.success || !payload?.data?.url) {
+      throw new Error(payload?.message || "Image upload failed. Please try another photo.");
+    }
+
+    return payload.data.url as string;
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    // 1. Validate all fields
-    if (!name || !email || !imageUrl || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword) {
       const msg = "Please fill in all fields to continue.";
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (!imageFile) {
+      const msg = "Please upload a profile photo from your device.";
+      setImageError(msg);
       setError(msg);
       toast.error(msg);
       return;
@@ -54,28 +138,28 @@ export default function RegisterPage() {
     }
 
     setError("");
+    setImageError("");
     setLoading(true);
 
     try {
-      // 2. Send data to better-auth using your React state variables
+      const uploadedImageUrl = await uploadProfileImage(imageFile);
+
       const { data, error } = await authClient.signUp.email({
         email: email,
         password: password,
         name: name,
-        image: imageUrl,
+        image: uploadedImageUrl,
         role: activeRole,
         callbackURL: "/login?verified=true",
       });
       console.log("Signup response:", { data, error });
-      // 3. Handle backend errors
       if (error) {
         const errorMsg = error.message || "Error signing up";
         setError(errorMsg);
         toast.error(errorMsg);
-        return; // Stop here if it fails
+        return;
       }
 
-      // 4. Handle success and redirect
       if (data) {
         toast.success(
           "Account created! Please check your email to verify your account.",
@@ -95,7 +179,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-6 py-16 sm:px-12">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-12 sm:px-6 sm:py-16 lg:px-12">
       {/* Background Ambient Glow */}
       <div className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 transform-gpu blur-3xl">
         <div
@@ -108,7 +192,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Registration Card */}
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/80 p-8 shadow-xl shadow-slate-200/50 backdrop-blur-xl sm:p-10">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-xl shadow-slate-200/50 backdrop-blur-xl sm:p-8 lg:p-10">
         {/* Header / Logo */}
         <div className="flex flex-col items-center text-center">
           <Link
@@ -180,22 +264,89 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* NEW IMAGE URL FIELD */}
           <div>
             <label
-              htmlFor="imageUrl"
+              htmlFor="profileImage"
               className="mb-1.5 block text-sm font-medium text-slate-700"
             >
-              Profile Image URL
+              Profile photo
             </label>
             <input
-              id="imageUrl"
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://example.com/my-photo.jpg"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+              id="profileImage"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={handleFileChange}
             />
+
+            {imagePreview ? (
+              <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center">
+                <img
+                  src={imagePreview}
+                  alt="Selected profile preview"
+                  className="h-20 w-20 shrink-0 rounded-xl border border-slate-200 object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-slate-800">{imageFile?.name}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {imageFile ? `${(imageFile.size / 1024).toFixed(0)} KB` : "Ready to upload"}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 transition-all hover:border-indigo-200 hover:bg-indigo-50"
+                    >
+                      Change photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 transition-all hover:border-rose-200 hover:bg-rose-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-4 py-6 text-center transition-all sm:py-7 ${
+                  isDragging
+                    ? "border-indigo-500 bg-indigo-50"
+                    : imageError
+                      ? "border-rose-300 bg-rose-50/40"
+                      : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40"
+                }`}
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-lg text-indigo-600">
+                  📷
+                </span>
+                <p className="mt-3 text-sm font-semibold text-slate-800">Tap to upload a photo</p>
+                <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-500">
+                  On phones, choose Take Photo or Photo Library. JPG, PNG, or WEBP up to 2MB.
+                </p>
+              </div>
+            )}
+            {imageError && (
+              <p className="mt-1.5 text-xs font-medium text-rose-600">{imageError}</p>
+            )}
           </div>
 
           <div>
