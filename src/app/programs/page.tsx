@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const aiFeatures = [
   {
     title: "AI early warning system",
@@ -14,6 +16,7 @@ const aiFeatures = [
   {
     title: "Multilingual notice translator",
     body: "Automatically translates school notices and announcements into each parent's preferred language.",
+    link: "/programs/notice",
   },
   {
     title: "Automated resource & classroom allocation planner",
@@ -37,6 +40,7 @@ const operationsFeatures = [
   {
     title: "Digital attendance management",
     body: "Teachers mark and track daily attendance digitally, with automatic summary reports.",
+    link: "/attendance"
   },
   {
     title: "Result & grade management system",
@@ -174,14 +178,17 @@ export default function ProgramsPage() {
         </div>
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {aiFeatures.map((f) => (
-            <FeatureCard
-              key={f.title}
-              title={f.title}
-              body={f.body}
-              variant="ai"
-            />
-          ))}
+          {aiFeatures.map((f) =>
+            f.link ? (
+              <Link href={f.link} key={f.title} className="group">
+                <FeatureCard title={f.title} body={f.body} variant="ai" />
+              </Link>
+            ) : (
+              <div key={f.title} className="opacity-90">
+                <FeatureCard title={f.title} body={f.body} variant="ai" />
+              </div>
+            )
+          )}
         </div>
       </section>
 
@@ -209,14 +216,17 @@ export default function ProgramsPage() {
         </div>
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {operationsFeatures.map((f) => (
-            <FeatureCard
-              key={f.title}
-              title={f.title}
-              body={f.body}
-              variant="operations"
-            />
-          ))}
+          {operationsFeatures.map((f) =>
+            f.link ? (
+              <Link href={f.link} key={f.title} className="group">
+                <FeatureCard title={f.title} body={f.body} variant="operations" />
+              </Link>
+            ) : (
+              <div key={f.title} className="opacity-90">
+                <FeatureCard title={f.title} body={f.body} variant="operations" />
+              </div>
+            )
+          )}
         </div>
       </section>
     </div>

@@ -65,10 +65,12 @@ export async function apiPatch(path: string, body: unknown) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP error ${res.status}`);
     }
+
     return await res.json();
   } catch (error: any) {
     console.error(`API PATCH error for ${path}:`, error);
