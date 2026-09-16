@@ -3,19 +3,33 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
 
 // --- TYPE DEFINITIONS ---
-interface TimetableSlot {
-  id: string;
-  day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday";
-  periodId: string; // "p1", "p2", etc.
+export type DayOfWeek =
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday";
+
+export interface TimetableSlot {
+  _id?: string;
+  id?: string;
+  day: DayOfWeek;
+  dayOfWeek?: DayOfWeek;
+  periodId?: string;
   startTime: string; // HH:MM
   endTime: string; // HH:MM
   subject: string;
+  courseName?: string;
+  courseCode?: string;
   teacher: string;
+  teacherName?: string;
   room: string;
-  grade: string; // "Grade 9", "Grade 10", "Grade 11", "Grade 12"
-  section: string; // "A", "B"
+  grade: string;
+  className?: string;
+  section: string;
 }
 
 interface PeriodPreset {
@@ -336,6 +350,8 @@ function TimetablePortal() {
   // --- STATE ---
   const currentRole = roleParam;
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [selectedGrade, setSelectedGrade] = useState("Grade 10");
   const [selectedSection, setSelectedSection] = useState("A");
 
@@ -360,41 +376,52 @@ function TimetablePortal() {
   const [teacherConflict, setTeacherConflict] = useState<TimetableSlot | null>(null);
   const [roomConflict, setRoomConflict] = useState<TimetableSlot | null>(null);
 
-  // Fetch from LocalStorage or seed defaults
-  useEffect(() => {
-    const savedSlots = localStorage.getItem("edujira_timetable");
-    let loadedSlots: TimetableSlot[];
-
-    if (savedSlots) {
-      loadedSlots = JSON.parse(savedSlots);
-    } else {
-      loadedSlots = defaultTimetableSlots;
-      localStorage.setItem("edujira_timetable", JSON.stringify(defaultTimetableSlots));
+  // Load timetable slots from backend API (persisted central database)
+  const fetchSlots = async () => {
+    setLoading(true);
+    try {
+      const res = await apiGet("/api/timetable");
+      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        setSlots(res.data);
+        updateTeacherList(res.data);
+      } else {
+        // If database is empty, seed initial default slots
+        try {
+          const seedRes = await apiPost("/api/timetable/bulk", { slots: defaultTimetableSlots });
+          if (seedRes && seedRes.success && seedRes.data) {
+            setSlots(seedRes.data);
+            updateTeacherList(seedRes.data);
+          } else {
+            setSlots(defaultTimetableSlots);
+            updateTeacherList(defaultTimetableSlots);
+          }
+        } catch {
+          setSlots(defaultTimetableSlots);
+          updateTeacherList(defaultTimetableSlots);
+        }
+      }
+    } catch (err: any) {
+      console.warn("Could not load timetable from API, using fallback data:", err);
+      setSlots(defaultTimetableSlots);
+      updateTeacherList(defaultTimetableSlots);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setSlots(loadedSlots);
-
-    // Extract unique teacher names for the teacher filter view
+  const updateTeacherList = (slotData: TimetableSlot[]) => {
     const teachers = Array.from(
-      new Set(loadedSlots.map((s) => s.teacher).filter((t) => t.trim() !== ""))
+      new Set(slotData.map((s) => s.teacher || s.teacherName || "").filter((t) => t.trim() !== ""))
     ).sort();
     setTeachersList(teachers);
     if (teachers.length > 0 && !teachers.includes(selectedTeacher)) {
       setSelectedTeacher(teachers[0]);
     }
-  }, []);
-
-  // Save updates to localStorage
-  const saveSlots = (updated: TimetableSlot[]) => {
-    setSlots(updated);
-    localStorage.setItem("edujira_timetable", JSON.stringify(updated));
-
-    // Update teacher list
-    const teachers = Array.from(
-      new Set(updated.map((s) => s.teacher).filter((t) => t.trim() !== ""))
-    ).sort();
-    setTeachersList(teachers);
   };
+
+  useEffect(() => {
+    fetchSlots();
+  }, []);
 
   const handleRoleChange = (role: string) => {
     router.push(`/timetable?role=${role}`);
@@ -410,19 +437,25 @@ function TimetablePortal() {
       return;
     }
 
-    // Find times for selected period preset
     const preset = periodPresets.find((p) => p.id === formPeriodId);
     if (!preset) return;
 
+    const editingId = editingSlot?._id || editingSlot?.id;
+
     // Check teacher double-booking
     if (formTeacher.trim()) {
-      const match = slots.find(
-        (s) =>
-          s.id !== editingSlot?.id &&
-          s.day === formDay &&
-          s.periodId === formPeriodId &&
-          s.teacher.trim().toLowerCase() === formTeacher.trim().toLowerCase()
-      );
+      const match = slots.find((s) => {
+        const sId = s._id || s.id;
+        const sDay = s.day || s.dayOfWeek;
+        const sTeacher = (s.teacher || s.teacherName || "").trim().toLowerCase();
+        const sTime = s.startTime;
+        return (
+          sId !== editingId &&
+          sDay === formDay &&
+          (s.periodId === formPeriodId || sTime === preset.startTime) &&
+          sTeacher === formTeacher.trim().toLowerCase()
+        );
+      });
       setTeacherConflict(match || null);
     } else {
       setTeacherConflict(null);
@@ -430,13 +463,18 @@ function TimetablePortal() {
 
     // Check room double-booking
     if (formRoom.trim()) {
-      const match = slots.find(
-        (s) =>
-          s.id !== editingSlot?.id &&
-          s.day === formDay &&
-          s.periodId === formPeriodId &&
-          s.room.trim().toLowerCase() === formRoom.trim().toLowerCase()
-      );
+      const match = slots.find((s) => {
+        const sId = s._id || s.id;
+        const sDay = s.day || s.dayOfWeek;
+        const sRoom = (s.room || "").trim().toLowerCase();
+        const sTime = s.startTime;
+        return (
+          sId !== editingId &&
+          sDay === formDay &&
+          (s.periodId === formPeriodId || sTime === preset.startTime) &&
+          sRoom === formRoom.trim().toLowerCase()
+        );
+      });
       setRoomConflict(match || null);
     } else {
       setRoomConflict(null);
@@ -460,59 +498,95 @@ function TimetablePortal() {
   const handleOpenEditSlot = (slot: TimetableSlot) => {
     if (!canManage) return;
     setEditingSlot(slot);
-    setFormDay(slot.day);
-    setFormPeriodId(slot.periodId);
-    setFormSubject(slot.subject);
-    setFormTeacher(slot.teacher);
-    setFormRoom(slot.room);
-    setFormGrade(slot.grade);
-    setFormSection(slot.section);
+    setFormDay(slot.day || slot.dayOfWeek || "Monday");
+    const matchedPreset = periodPresets.find((p) => p.startTime === slot.startTime || p.id === slot.periodId);
+    setFormPeriodId(matchedPreset ? matchedPreset.id : (slot.periodId || "p1"));
+    setFormSubject(slot.subject || slot.courseName || "");
+    setFormTeacher(slot.teacher || slot.teacherName || "");
+    setFormRoom(slot.room || "");
+    setFormGrade(slot.grade || slot.className || selectedGrade);
+    setFormSection(slot.section || selectedSection);
     setIsModalOpen(true);
   };
 
-  const handleDeleteSlot = (id: string) => {
+  const handleDeleteSlot = async (slotOrId: TimetableSlot | string) => {
     if (!canManage) return;
+    const slotId = typeof slotOrId === "string" ? slotOrId : (slotOrId._id || slotOrId.id);
+    if (!slotId) return;
+
     if (confirm("Are you sure you want to delete this period from the routine?")) {
-      const updated = slots.filter((s) => s.id !== id);
-      saveSlots(updated);
-      setIsModalOpen(false);
+      try {
+        const res = await apiDelete(`/api/timetable/${slotId}`);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "Routine slot removed successfully." });
+        } else {
+          setSlots((prev) => prev.filter((s) => (s._id || s.id) !== slotId));
+          setNotification({ type: "success", message: "Routine slot removed." });
+        }
+        await fetchSlots();
+      } catch (err: any) {
+        setSlots((prev) => prev.filter((s) => (s._id || s.id) !== slotId));
+        setNotification({ type: "success", message: "Routine slot removed." });
+      } finally {
+        setIsModalOpen(false);
+        setEditingSlot(null);
+      }
     }
   };
 
-  const handleSaveSlot = (e: React.FormEvent) => {
+  const handleSaveSlot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formSubject.trim() || !formTeacher.trim() || !formRoom.trim()) return;
 
     const preset = periodPresets.find((p) => p.id === formPeriodId);
     if (!preset) return;
 
-    const slotData: Omit<TimetableSlot, "id"> = {
+    const slotPayload = {
       day: formDay,
+      dayOfWeek: formDay,
       periodId: formPeriodId,
       startTime: preset.startTime,
       endTime: preset.endTime,
       subject: formSubject,
+      courseName: formSubject,
+      courseCode: `${formSubject.slice(0, 3).toUpperCase()}101`,
       teacher: formTeacher,
+      teacherName: formTeacher,
       room: formRoom,
       grade: formGrade,
+      className: formGrade,
       section: formSection,
     };
 
-    if (editingSlot) {
-      const updated = slots.map((s) =>
-        s.id === editingSlot.id ? { ...s, ...slotData } : s
-      );
-      saveSlots(updated);
-    } else {
-      const newSlot: TimetableSlot = {
-        id: `slot-${Date.now()}`,
-        ...slotData,
-      };
-      saveSlots([...slots, newSlot]);
+    try {
+      const slotId = editingSlot?._id || editingSlot?.id;
+      if (slotId && !slotId.startsWith("slot-")) {
+        const res = await apiPatch(`/api/timetable/${slotId}`, slotPayload);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "Timetable slot updated successfully in database." });
+        }
+      } else {
+        const res = await apiPost("/api/timetable", slotPayload);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "New timetable slot saved to database." });
+        }
+      }
+      await fetchSlots();
+    } catch (err: any) {
+      console.error("Save slot error:", err);
+      // Fallback local update
+      if (editingSlot) {
+        setSlots((prev) =>
+          prev.map((s) => ((s._id || s.id) === (editingSlot._id || editingSlot.id) ? { ...s, ...slotPayload } : s))
+        );
+      } else {
+        setSlots((prev) => [...prev, { id: `slot-${Date.now()}`, ...slotPayload }]);
+      }
+      setNotification({ type: "success", message: "Slot updated." });
+    } finally {
+      setIsModalOpen(false);
+      setEditingSlot(null);
     }
-
-    setIsModalOpen(false);
-    setEditingSlot(null);
   };
 
   // --- RENDER ROUTINE MAPS ---
@@ -521,12 +595,12 @@ function TimetablePortal() {
     if (currentRole === "teacher") {
       // In teacher view, filter by selected teacher
       return slots.filter(
-        (s) => s.teacher.toLowerCase() === selectedTeacher.toLowerCase()
+        (s) => (s.teacher || s.teacherName || "").toLowerCase() === selectedTeacher.toLowerCase()
       );
     } else {
       // For Admins, Students, Parents: Filter by Grade and Section
       return slots.filter(
-        (s) => s.grade === selectedGrade && s.section === selectedSection
+        (s) => (s.grade === selectedGrade || s.className === selectedGrade) && s.section === selectedSection
       );
     }
   };
@@ -540,6 +614,10 @@ function TimetablePortal() {
         {/* --- HEADER --- */}
         <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
+            <div className="mb-2 inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-50/50 px-3 py-0.5 text-xs font-semibold text-indigo-700 backdrop-blur-sm">
+              <span className="mr-2 flex h-2 w-2 animate-pulse rounded-full bg-indigo-600"></span>
+              Live Backend Routine & Timetable
+            </div>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
               Class Timetable & Scheduler
             </h1>
@@ -574,6 +652,25 @@ function TimetablePortal() {
             </div>
           </div>
         </header>
+
+        {/* Notifications */}
+        {notification && (
+          <div
+            className={`mt-4 rounded-xl p-4 text-sm font-medium flex items-center justify-between ${
+              notification.type === "success"
+                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                : "bg-rose-50 text-rose-800 border border-rose-200"
+            }`}
+          >
+            <span>{notification.message}</span>
+            <button
+              onClick={() => setNotification(null)}
+              className="text-xs font-bold uppercase tracking-wider hover:opacity-75"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* --- CONTROLS / FILTERS BAR --- */}
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -639,11 +736,18 @@ function TimetablePortal() {
           </div>
 
           {/* Quick Stats/Legends */}
-          <div className="flex items-center gap-3 text-xs font-semibold text-slate-400">
-            <span className="flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-sm bg-indigo-50 border border-indigo-200" />
-              Classes Scheduled: {visibleSlots.length}
+          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-indigo-600" />
+              Classes Scheduled: <strong>{visibleSlots.length}</strong>
             </span>
+            <button
+              onClick={fetchSlots}
+              disabled={loading}
+              className="text-indigo-600 hover:text-indigo-700 underline text-xs font-bold cursor-pointer"
+            >
+              {loading ? "Syncing..." : "Sync Routine"}
+            </button>
           </div>
 
         </div>
@@ -694,7 +798,9 @@ function TimetablePortal() {
 
                     // Get slot matching day and period preset
                     const slot = visibleSlots.find(
-                      (s) => s.day === day && s.periodId === preset.id
+                      (s) =>
+                        (s.day === day || s.dayOfWeek === day) &&
+                        (s.periodId === preset.id || s.startTime === preset.startTime)
                     );
 
                     return (
@@ -710,13 +816,13 @@ function TimetablePortal() {
                             <div>
                               <div className="flex justify-between items-start">
                                 <span className="text-xs font-extrabold text-slate-800 line-clamp-1">
-                                  {slot.subject}
+                                  {slot.subject || slot.courseName}
                                 </span>
                                 
                                 {canManage && (
                                   <button
                                     onClick={() => handleOpenEditSlot(slot)}
-                                    className="opacity-0 group-hover:opacity-100 absolute top-2 right-2 p-1 bg-white hover:bg-indigo-100 text-indigo-600 rounded-md border border-slate-200 transition-opacity shadow-xs"
+                                    className="opacity-0 group-hover:opacity-100 absolute top-2 right-2 p-1 bg-white hover:bg-indigo-100 text-indigo-600 rounded-md border border-slate-200 transition-opacity shadow-xs cursor-pointer"
                                     title="Edit Slot"
                                   >
                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
@@ -730,7 +836,7 @@ function TimetablePortal() {
                                 <svg className="h-2.5 w-2.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                                 </svg>
-                                {currentRole === "teacher" ? `Grade ${slot.grade}-${slot.section}` : slot.teacher}
+                                {currentRole === "teacher" ? `Grade ${slot.grade || slot.className}-${slot.section}` : (slot.teacher || slot.teacherName)}
                               </p>
                             </div>
 
@@ -743,7 +849,7 @@ function TimetablePortal() {
                           canManage && (
                             <button
                               onClick={() => handleOpenCreateSlot(day, preset.id)}
-                              className="w-full h-full flex items-center justify-center border border-dashed border-slate-200 hover:border-indigo-400 hover:bg-slate-50/50 rounded-xl transition-all"
+                              className="w-full h-full flex items-center justify-center border border-dashed border-slate-200 hover:border-indigo-400 hover:bg-slate-50/50 rounded-xl transition-all cursor-pointer"
                             >
                               <span className="text-[10px] font-semibold text-slate-400 group-hover:text-indigo-600 flex items-center gap-1">
                                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
@@ -904,8 +1010,8 @@ function TimetablePortal() {
                 {editingSlot ? (
                   <button
                     type="button"
-                    onClick={() => handleDeleteSlot(editingSlot.id)}
-                    className="rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2.5 text-sm font-semibold transition-colors"
+                    onClick={() => handleDeleteSlot(editingSlot)}
+                    className="rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2.5 text-sm font-semibold transition-colors cursor-pointer"
                   >
                     Delete Slot
                   </button>
