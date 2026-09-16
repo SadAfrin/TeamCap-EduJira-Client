@@ -84,7 +84,7 @@ export default function DashboardRootLayout({
     }
   };
 
-  if (isLoading || checkingApproval) {
+  if (isLoading && !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
         <div className="flex flex-col items-center gap-4">
@@ -97,7 +97,7 @@ export default function DashboardRootLayout({
     );
   }
 
-  if (!isAuthenticated) return null;
+  if (!isLoading && !isAuthenticated) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 ">

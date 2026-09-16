@@ -7,15 +7,19 @@ import { ROLE_DETAILS } from "@/config/navigation";
 import { UserRole } from "@/types/navigation";
 import { apiGet, apiPut } from "@/lib/api";
 import toast from "react-hot-toast";
+import LinkChildModal from "@/components/dashboard/LinkChildModal";
+import { childDisplayName, useParentChildren } from "@/hooks/useParentChildren";
 
 export default function ProfilePage() {
   const { role, user, isLoading } = useAuthRole();
   const userRole = (role?.toLowerCase() as UserRole) || UserRole.STUDENT;
   const roleMeta = ROLE_DETAILS[userRole] || ROLE_DETAILS[UserRole.STUDENT];
 
+  const { parent: parentProfile } = useParentChildren();
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<
+  const [activeTab, setActiveTab] = useState
     "general" | "academic" | "security"
   >("general");
 
@@ -78,7 +82,7 @@ export default function ProfilePage() {
   }, [user]);
 
   const handleChange = (
-    e: React.ChangeEvent<
+    e: React.ChangeEvent
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
@@ -98,7 +102,7 @@ export default function ProfilePage() {
       if (userRole === "teacher")
         endpoint = `/api/teachers/${user?.id || "TCH-101"}`;
       if (userRole === "parent")
-        endpoint = `/api/parents/${user?.id || "PAR-101"}`;
+        endpoint = `/api/parents/${parentProfile?.parentId || "PAR-101"}`;
       if (userRole === "admin")
         endpoint = `/api/admins/${user?.id || "ADM-101"}`;
 
@@ -214,16 +218,6 @@ export default function ProfilePage() {
                   : "Institutional Info"}
           </span>
         </button>
-        {/* <button
-          onClick={() => setActiveTab("security")}
-          className={`flex items-center gap-2 py-4 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all ${
-            activeTab === "security"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <span>🔒 Security & Password</span>
-        </button> */}
       </div>
 
       {/* Tab 1: General Info */}
@@ -544,26 +538,7 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 space-y-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-amber-900">
-                  Linked Student Child
-                </p>
-                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-amber-100">
-                  <div>
-                    <h5 className="font-bold text-slate-900 text-sm">
-                      {formData.name
-                        ? `${formData.name}'s Child (Rahim Uddin)`
-                        : "Rahim Uddin"}
-                    </h5>
-                    <p className="text-xs text-slate-500">
-                      Class 8 – Section B • Roll #01
-                    </p>
-                  </div>
-                  <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                    Enrolled ✓
-                  </span>
-                </div>
-              </div>
+              <ParentLinkedChildrenCard />
             </>
           )}
 
@@ -603,6 +578,62 @@ export default function ProfilePage() {
             </button>
           </div>
         </form>
+      )}
+    </div>
+  );
+}
+
+function ParentLinkedChildrenCard() {
+  const { parent, children, approvedChildren, loading, reload } = useParentChildren();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  if (loading) {
+    return <p className="text-xs text-slate-500">Loading linked children...</p>;
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-amber-900">Linked Student Children</p>
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="rounded-lg bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-amber-500"
+        >
+          + Add / Link Child
+        </button>
+      </div>
+
+      {approvedChildren.length === 0 ? (
+        <p className="text-xs text-slate-500 bg-white p-3 rounded-xl border border-amber-100">
+          No child linked yet. Verify a student from the school database to continue.
+        </p>
+      ) : (
+        approvedChildren.map((child) => (
+          <div
+            key={child.studentId}
+            className="flex items-center justify-between bg-white p-3 rounded-xl border border-amber-100"
+          >
+            <div>
+              <h5 className="font-bold text-slate-900 text-sm">{childDisplayName(child)}</h5>
+              <p className="text-xs text-slate-500">
+                {child.className || "Class N/A"}
+                {child.section ? ` – Section ${child.section}` : ""}
+                {child.roll ? ` • Roll #${child.roll}` : ""} • {child.studentId}
+              </p>
+            </div>
+            <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Linked ✓</span>
+          </div>
+        ))
+      )}
+
+      {isModalOpen && parent?.parentId && (
+        <LinkChildModal
+          parentId={parent.parentId}
+          existingChildren={children}
+          onClose={() => setIsModalOpen(false)}
+          onLinked={() => void reload()}
+        />
       )}
     </div>
   );
