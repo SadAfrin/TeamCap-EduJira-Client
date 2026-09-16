@@ -2,10 +2,13 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
 
 // --- TYPE DEFINITIONS ---
 interface CalendarCategory {
+  _id?: string;
   id: string;
+  customId?: string;
   name: string;
   color: "indigo" | "red" | "emerald" | "amber" | "purple" | "cyan";
   description: string;
@@ -13,7 +16,9 @@ interface CalendarCategory {
 }
 
 interface SchoolEvent {
+  _id?: string;
   id: string;
+  customId?: string;
   title: string;
   description: string;
   date: string; // YYYY-MM-DD
@@ -263,45 +268,81 @@ function CalendarPortal() {
   const [calDesc, setCalDesc] = useState("");
   const [calColor, setCalColor] = useState<"indigo" | "red" | "emerald" | "amber" | "purple" | "cyan">("indigo");
   const [calRoles, setCalRoles] = useState<string[]>([]);
+  // Loading and Notification States
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  // Load data from LocalStorage or seed defaults
+  // Load data from Backend Database or seed defaults
+  const fetchCalendarData = async () => {
+    setLoading(true);
+    try {
+      // 1. Fetch Calendars
+      let loadedCals: CalendarCategory[] = [];
+      const calRes = await apiGet("/api/calendars");
+      if (calRes && calRes.success && Array.isArray(calRes.data) && calRes.data.length > 0) {
+        loadedCals = calRes.data.map((c: any) => ({
+          ...c,
+          id: c.customId || c.id || c._id,
+        }));
+      } else {
+        // Seed default calendars to central database
+        try {
+          const seedCalRes = await apiPost("/api/calendars/bulk", { calendars: defaultCalendars });
+          if (seedCalRes && seedCalRes.success && Array.isArray(seedCalRes.data)) {
+            loadedCals = seedCalRes.data.map((c: any) => ({
+              ...c,
+              id: c.customId || c.id || c._id,
+            }));
+          } else {
+            loadedCals = defaultCalendars;
+          }
+        } catch {
+          loadedCals = defaultCalendars;
+        }
+      }
+
+      setCalendars(loadedCals);
+      setSelectedCalendars((prev) => (prev.length > 0 ? prev : loadedCals.map((c) => c.id)));
+
+      // 2. Fetch Events
+      let loadedEvts: SchoolEvent[] = [];
+      const evtRes = await apiGet("/api/events");
+      if (evtRes && evtRes.success && Array.isArray(evtRes.data) && evtRes.data.length > 0) {
+        loadedEvts = evtRes.data.map((e: any) => ({
+          ...e,
+          id: e.customId || e.id || e._id,
+        }));
+      } else {
+        // Seed default events to central database
+        try {
+          const seedEvtRes = await apiPost("/api/events/bulk", { events: defaultEvents });
+          if (seedEvtRes && seedEvtRes.success && Array.isArray(seedEvtRes.data)) {
+            loadedEvts = seedEvtRes.data.map((e: any) => ({
+              ...e,
+              id: e.customId || e.id || e._id,
+            }));
+          } else {
+            loadedEvts = defaultEvents;
+          }
+        } catch {
+          loadedEvts = defaultEvents;
+        }
+      }
+
+      setEvents(loadedEvts);
+    } catch (err: any) {
+      console.warn("Could not load calendars/events from backend:", err);
+      setCalendars(defaultCalendars);
+      setEvents(defaultEvents);
+      setSelectedCalendars(defaultCalendars.map((c) => c.id));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const savedCals = localStorage.getItem("edujira_calendars");
-    const savedEvts = localStorage.getItem("edujira_events");
-
-    let loadedCals: CalendarCategory[];
-    let loadedEvts: SchoolEvent[];
-
-    if (savedCals) {
-      loadedCals = JSON.parse(savedCals);
-    } else {
-      loadedCals = defaultCalendars;
-      localStorage.setItem("edujira_calendars", JSON.stringify(defaultCalendars));
-    }
-
-    if (savedEvts) {
-      loadedEvts = JSON.parse(savedEvts);
-    } else {
-      loadedEvts = defaultEvents;
-      localStorage.setItem("edujira_events", JSON.stringify(defaultEvents));
-    }
-
-    /* eslint-disable-next-line react-hooks/set-state-in-effect */
-    setCalendars(loadedCals);
-    setEvents(loadedEvts);
-    setSelectedCalendars(loadedCals.map((c) => c.id));
+    fetchCalendarData();
   }, []);
-
-  // Save changes to localStorage helper
-  const saveCalendars = (updated: CalendarCategory[]) => {
-    setCalendars(updated);
-    localStorage.setItem("edujira_calendars", JSON.stringify(updated));
-  };
-
-  const saveEvents = (updated: SchoolEvent[]) => {
-    setEvents(updated);
-    localStorage.setItem("edujira_events", JSON.stringify(updated));
-  };
 
   // Switch role handler
   const handleRoleChange = (role: string) => {
@@ -425,52 +466,75 @@ function CalendarPortal() {
     setIsEventModalOpen(true);
   };
 
-  const handleSaveEvent = (e: React.FormEvent) => {
+  const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventTitle.trim() || !eventDate || !eventCalId) return;
 
-    if (editingEvent) {
-      const updated = events.map((evt) =>
-        evt.id === editingEvent.id
-          ? {
-              ...evt,
-              title: eventTitle,
-              description: eventDesc,
-              date: eventDate,
-              startTime: eventStart,
-              endTime: eventEnd,
-              location: eventLoc,
-              calendarId: eventCalId,
-              targetRoles: eventRoles,
-            }
-          : evt
-      );
-      saveEvents(updated);
-    } else {
-      const newEvt: SchoolEvent = {
-        id: `evt-${Date.now()}`,
-        title: eventTitle,
-        description: eventDesc,
-        date: eventDate,
-        startTime: eventStart,
-        endTime: eventEnd,
-        location: eventLoc,
-        calendarId: eventCalId,
-        targetRoles: eventRoles,
-      };
-      saveEvents([...events, newEvt]);
-    }
+    const eventPayload = {
+      title: eventTitle,
+      description: eventDesc,
+      date: eventDate,
+      startTime: eventStart,
+      endTime: eventEnd,
+      location: eventLoc,
+      calendarId: eventCalId,
+      targetRoles: eventRoles,
+    };
 
-    setIsEventModalOpen(false);
-    setEditingEvent(null);
+    try {
+      const eventId = editingEvent?._id || editingEvent?.id;
+      if (eventId && !eventId.startsWith("evt-")) {
+        const res = await apiPatch(`/api/events/${eventId}`, eventPayload);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "Event updated in database successfully." });
+        }
+      } else {
+        const res = await apiPost("/api/events", eventPayload);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "New event created in database successfully." });
+        }
+      }
+      await fetchCalendarData();
+    } catch (err: any) {
+      console.error("Save event error:", err);
+      if (editingEvent) {
+        setEvents((prev) =>
+          prev.map((evt) =>
+            (evt._id || evt.id) === (editingEvent._id || editingEvent.id)
+              ? { ...evt, ...eventPayload }
+              : evt
+          )
+        );
+      } else {
+        setEvents((prev) => [
+          ...prev,
+          { id: `evt-${Date.now()}`, ...eventPayload },
+        ]);
+      }
+      setNotification({ type: "success", message: "Event saved." });
+    } finally {
+      setIsEventModalOpen(false);
+      setEditingEvent(null);
+    }
   };
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
     if (!canManage) return;
     if (confirm("Are you sure you want to delete this event?")) {
-      const updated = events.filter((evt) => evt.id !== id);
-      saveEvents(updated);
-      setIsEventDetailOpen(false);
+      try {
+        const res = await apiDelete(`/api/events/${id}`);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "Event deleted from database." });
+        } else {
+          setEvents((prev) => prev.filter((evt) => (evt._id || evt.id) !== id));
+        }
+        await fetchCalendarData();
+      } catch (err: any) {
+        setEvents((prev) => prev.filter((evt) => (evt._id || evt.id) !== id));
+        setNotification({ type: "success", message: "Event deleted." });
+      } finally {
+        setIsEventDetailOpen(false);
+      }
     }
   };
 
@@ -495,51 +559,76 @@ function CalendarPortal() {
     setIsCalendarModalOpen(true);
   };
 
-  const handleSaveCalendar = (e: React.FormEvent) => {
+  const handleSaveCalendar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!calName.trim()) return;
 
-    if (editingCalendar) {
-      const updated = calendars.map((c) =>
-        c.id === editingCalendar.id
-          ? {
-              ...c,
-              name: calName,
-              description: calDesc,
-              color: calColor,
-              targetRoles: calRoles,
-            }
-          : c
-      );
-      saveCalendars(updated);
-    } else {
-      const newId = `cal-${Date.now()}`;
-      const newCal: CalendarCategory = {
-        id: newId,
-        name: calName,
-        description: calDesc,
-        color: calColor,
-        targetRoles: calRoles,
-      };
-      saveCalendars([...calendars, newCal]);
-      setSelectedCalendars((prev) => [...prev, newId]);
-    }
+    const calPayload = {
+      name: calName,
+      description: calDesc,
+      color: calColor,
+      targetRoles: calRoles,
+    };
 
-    setIsCalendarModalOpen(false);
-    setEditingCalendar(null);
+    try {
+      const calId = editingCalendar?._id || editingCalendar?.id;
+      if (calId && !calId.startsWith("cal-")) {
+        const res = await apiPatch(`/api/calendars/${calId}`, calPayload);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "Calendar category updated in database." });
+        }
+      } else {
+        const res = await apiPost("/api/calendars", calPayload);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "New calendar category created in database." });
+          const newId = res.data?.customId || res.data?._id || res.data?.id;
+          if (newId) setSelectedCalendars((prev) => [...prev, newId]);
+        }
+      }
+      await fetchCalendarData();
+    } catch (err: any) {
+      console.error("Save calendar error:", err);
+      if (editingCalendar) {
+        setCalendars((prev) =>
+          prev.map((c) =>
+            (c._id || c.id) === (editingCalendar._id || editingCalendar.id)
+              ? { ...c, ...calPayload }
+              : c
+          )
+        );
+      } else {
+        const newId = `cal-${Date.now()}`;
+        setCalendars((prev) => [...prev, { id: newId, ...calPayload }]);
+        setSelectedCalendars((prev) => [...prev, newId]);
+      }
+      setNotification({ type: "success", message: "Calendar category updated." });
+    } finally {
+      setIsCalendarModalOpen(false);
+      setEditingCalendar(null);
+    }
   };
 
-  const handleDeleteCalendar = (id: string) => {
+  const handleDeleteCalendar = async (id: string) => {
     if (currentRole !== "admin") return;
     if (
       confirm(
         "Deleting this calendar will permanently delete all events associated with it. Do you want to proceed?"
       )
     ) {
-      const updatedCals = calendars.filter((c) => c.id !== id);
-      const updatedEvts = events.filter((evt) => evt.calendarId !== id);
-      saveCalendars(updatedCals);
-      saveEvents(updatedEvts);
+      try {
+        const res = await apiDelete(`/api/calendars/${id}`);
+        if (res && res.success) {
+          setNotification({ type: "success", message: "Calendar category and associated events deleted." });
+        } else {
+          setCalendars((prev) => prev.filter((c) => (c._id || c.id) !== id));
+          setEvents((prev) => prev.filter((evt) => evt.calendarId !== id));
+        }
+        await fetchCalendarData();
+      } catch (err: any) {
+        setCalendars((prev) => prev.filter((c) => (c._id || c.id) !== id));
+        setEvents((prev) => prev.filter((evt) => evt.calendarId !== id));
+        setNotification({ type: "success", message: "Calendar category deleted." });
+      }
     }
   };
 
@@ -603,6 +692,10 @@ function CalendarPortal() {
         {/* --- HEADER --- */}
         <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
+            <div className="mb-2 inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-50/50 px-3 py-0.5 text-xs font-semibold text-indigo-700 backdrop-blur-sm">
+              <span className="mr-2 flex h-2 w-2 animate-pulse rounded-full bg-indigo-600"></span>
+              Live Backend Calendar & Events
+            </div>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
               Calendar & Events Hub
             </h1>
@@ -611,28 +704,60 @@ function CalendarPortal() {
             </p>
           </div>
 
-          {/* Quick Role Simulator */}
-          <div className="flex items-center gap-2 rounded-xl bg-white p-2 shadow-sm border border-slate-200">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 px-2">
-              Viewing As:
-            </span>
-            <div className="flex gap-1">
-              {allRoles.map((role) => (
-                <button
-                  key={role.id}
-                  onClick={() => handleRoleChange(role.id)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                    currentRole === role.id
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  {role.label}
-                </button>
-              ))}
+          {/* Quick Role Simulator & Sync Action */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={fetchCalendarData}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
+            >
+              <svg className={`h-3.5 w-3.5 text-indigo-600 ${loading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+              {loading ? "Syncing..." : "Sync Calendar"}
+            </button>
+
+            <div className="flex items-center gap-2 rounded-xl bg-white p-2 shadow-sm border border-slate-200">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 px-2">
+                Viewing As:
+              </span>
+              <div className="flex gap-1">
+                {allRoles.map((role) => (
+                  <button
+                    key={role.id}
+                    onClick={() => handleRoleChange(role.id)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                      currentRole === role.id
+                        ? "bg-indigo-600 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    {role.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </header>
+
+        {/* Notifications */}
+        {notification && (
+          <div
+            className={`mt-4 rounded-xl p-4 text-sm font-medium flex items-center justify-between ${
+              notification.type === "success"
+                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                : "bg-rose-50 text-rose-800 border border-rose-200"
+            }`}
+          >
+            <span>{notification.message}</span>
+            <button
+              onClick={() => setNotification(null)}
+              className="text-xs font-bold uppercase tracking-wider hover:opacity-75"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* --- MAIN GRID --- */}
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-4">
