@@ -38,7 +38,20 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} font-body min-h-screen bg-slate-50 text-ink antialiased`}
       >
-        <Toaster />
+        <Toaster
+          toastOptions={{
+            // Default duration for all toasts
+            duration: 6000,
+
+            // You can even set different times for success vs error
+            success: {
+              duration: 4000,
+            },
+            error: {
+              duration: 8000, // Give users more time to read errors!
+            },
+          }}
+        />
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

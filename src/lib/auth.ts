@@ -68,6 +68,7 @@ export const auth = betterAuth({
     enabled: true, 
     requireEmailVerification: true,
     preventUserEnumeration: false, 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onExistingUserSignUp: async ({ user }) => {
       
       throw new APIError("BAD_REQUEST", {

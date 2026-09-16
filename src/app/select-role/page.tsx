@@ -22,6 +22,7 @@ export default function SelectRolePage() {
     if (!error) {
       await authClient.getSession();
 
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = `/dashboard/${selectedRole}`;
     } else {
       console.error("Failed to update role:", error);

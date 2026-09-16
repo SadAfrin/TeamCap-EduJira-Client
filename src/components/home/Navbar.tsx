@@ -174,7 +174,7 @@ export default function Navbar() {
                   />
                 </div>
                 <div className="flex items-center gap-2 text-left">
-                  <span className="max-w-[120px] truncate text-xs font-semibold text-slate-800">
+                  <span className="max-w-30 truncate text-xs font-semibold text-slate-800">
                     {user?.name || "User"}
                   </span>
                   <span
@@ -322,30 +322,56 @@ export default function Navbar() {
             )}
 
             <Link
+              href="/"
+              className={`text-sm transition-colors hover:text-indigo-600 ${
+                isActive("/")
+                  ? "font-semibold text-indigo-600 underline underline-offset-4"
+                  : "font-medium text-slate-600"
+              }`}
+            >
+              Home
+            </Link>
+
+            <Link
               href="/programs"
-              className="text-base font-semibold text-slate-800 hover:text-indigo-600"
-              onClick={() => setIsMobileMenuOpen(false)}
+              className={`text-sm transition-colors hover:text-indigo-600 ${
+                isActive("/programs")
+                  ? "font-semibold text-indigo-600 underline underline-offset-4"
+                  : "font-medium text-slate-600"
+              }`}
             >
               Features
             </Link>
+
             <Link
               href="/calendar"
-              className="text-base font-semibold text-slate-800 hover:text-indigo-600"
-              onClick={() => setIsMobileMenuOpen(false)}
+              className={`text-sm transition-colors hover:text-indigo-600 ${
+                isActive("/calendar")
+                  ? "font-semibold text-indigo-600 underline underline-offset-4"
+                  : "font-medium text-slate-600"
+              }`}
             >
               Calendar
             </Link>
+
             <Link
               href="/timetable"
-              className="text-base font-semibold text-slate-800 hover:text-indigo-600"
-              onClick={() => setIsMobileMenuOpen(false)}
+              className={`text-sm transition-colors hover:text-indigo-600 ${
+                isActive("/timetable")
+                  ? "font-semibold text-indigo-600 underline underline-offset-4"
+                  : "font-medium text-slate-600"
+              }`}
             >
               Timetable
             </Link>
+
             <Link
               href="/about"
-              className="text-base font-semibold text-slate-800 hover:text-indigo-600"
-              onClick={() => setIsMobileMenuOpen(false)}
+              className={`text-sm transition-colors hover:text-indigo-600 ${
+                isActive("/about")
+                  ? "font-semibold text-indigo-600 underline underline-offset-4"
+                  : "font-medium text-slate-600"
+              }`}
             >
               About
             </Link>

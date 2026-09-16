@@ -13,7 +13,11 @@ import { authClient } from "@/lib/auth-client";
 import { apiGet } from "@/lib/api";
 import toast from "react-hot-toast";
 
-export default function DashboardRootLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardRootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { role, user, isAuthenticated, isLoading } = useAuthRole();
   const router = useRouter();
   const pathname = usePathname();
@@ -25,15 +29,21 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   const userRole = (role?.toLowerCase() as UserRole) || UserRole.STUDENT;
   const roleMeta = ROLE_DETAILS[userRole] || ROLE_DETAILS[UserRole.STUDENT];
 
+  const isActive = (path: string) => pathname === path;
+
   useEffect(() => {
     async function verifyStudentApproval() {
       if (userRole === "student" && user?.email) {
         try {
           setCheckingApproval(true);
-          const res = await apiGet(`/api/students/status?email=${encodeURIComponent(user.email)}`);
+          const res = await apiGet(
+            `/api/students/status?email=${encodeURIComponent(user.email)}`,
+          );
           if (res.success && res.exists) {
             if (res.status === "pending" || res.status === "rejected") {
-              router.push(`/pending-review?email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.name || "")}`);
+              router.push(
+                `/pending-review?email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.name || "")}`,
+              );
               return;
             }
           }
@@ -90,17 +100,27 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   if (!isAuthenticated) return null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50 ">
       {/* Universal Top Navbar */}
-      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md">
+      <header className="sticky  top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 md:hidden"
             aria-label="Toggle menu"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+              />
             </svg>
           </button>
 
@@ -113,11 +133,69 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
             </span>
           </Link>
 
-          <span className={`hidden md:inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${roleMeta.color.lightBg} ${roleMeta.color.text} border ${roleMeta.color.border} ml-2`}>
+          <span
+            className={`hidden md:inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${roleMeta.color.lightBg} ${roleMeta.color.text} border ${roleMeta.color.border} ml-2`}
+          >
             {userRole} Workspace
           </span>
         </div>
+        <div className="flex items-center gap-10">
+          {/* Brand / Home Link */}
+          <Link
+            href="/"
+            className="text-md font-bold tracking-tight text-indigo-600 transition-colors hover:text-indigo-700"
+          >
+            Home
+          </Link>
 
+          {/* Main Navigation Links */}
+          {/* hidden on mobile, flex on medium screens and up */}
+          <div className="hidden items-center gap-7 md:flex">
+            <Link
+              href="/programs"
+              className={`text-sm font-medium transition-all duration-200 hover:text-indigo-600 ${
+                isActive("/programs")
+                  ? "text-indigo-600 underline decoration-indigo-600 decoration-2 underline-offset-[12px]"
+                  : "text-slate-500"
+              }`}
+            >
+              Features
+            </Link>
+
+            <Link
+              href="/calendar"
+              className={`text-sm font-medium transition-all duration-200 hover:text-indigo-600 ${
+                isActive("/calendar")
+                  ? "text-indigo-600 underline decoration-indigo-600 decoration-2 underline-offset-[12px]"
+                  : "text-slate-500"
+              }`}
+            >
+              Calendar
+            </Link>
+
+            <Link
+              href="/timetable"
+              className={`text-sm font-medium transition-all duration-200 hover:text-indigo-600 ${
+                isActive("/timetable")
+                  ? "text-indigo-600 underline decoration-indigo-600 decoration-2 underline-offset-[12px]"
+                  : "text-slate-500"
+              }`}
+            >
+              Timetable
+            </Link>
+
+            <Link
+              href="/about"
+              className={`text-sm font-medium transition-all duration-200 hover:text-indigo-600 ${
+                isActive("/about")
+                  ? "text-indigo-600 underline decoration-indigo-600 decoration-2 underline-offset-[12px]"
+                  : "text-slate-500"
+              }`}
+            >
+              About
+            </Link>
+          </div>
+        </div>
         {/* Right Action Icons: Notification Bell & User Profile */}
         <div className="flex items-center gap-3">
           <NotificationBell />
@@ -139,20 +217,40 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
                 />
               </div>
               <div className="hidden text-left lg:block">
-                <p className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[120px]">{user?.name || "User"}</p>
-                <p className="text-[10px] font-medium text-slate-500 capitalize">{userRole}</p>
+                <p className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[120px]">
+                  {user?.name || "User"}
+                </p>
+                <p className="text-[10px] font-medium text-slate-500 capitalize">
+                  {userRole}
+                </p>
               </div>
-              <svg className="h-3.5 w-3.5 text-slate-400 hidden lg:block" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              <svg
+                className="h-3.5 w-3.5 text-slate-400 hidden lg:block"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                />
               </svg>
             </button>
 
             {showProfileMenu && (
               <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
                 <div className="border-b border-slate-100 p-2 text-xs">
-                  <p className="font-bold text-slate-900 truncate">{user?.name || "User"}</p>
-                  <p className="text-slate-500 font-mono text-[11px] truncate">{user?.email}</p>
-                  <span className={`mt-1.5 inline-block rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${roleMeta.color.lightBg} ${roleMeta.color.text}`}>
+                  <p className="font-bold text-slate-900 truncate">
+                    {user?.name || "User"}
+                  </p>
+                  <p className="text-slate-500 font-mono text-[11px] truncate">
+                    {user?.email}
+                  </p>
+                  <span
+                    className={`mt-1.5 inline-block rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${roleMeta.color.lightBg} ${roleMeta.color.text}`}
+                  >
                     Role: {userRole}
                   </span>
                 </div>
@@ -186,7 +284,11 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
 
       {/* Main Body with Sidebar */}
       <div className="flex flex-1">
-        <Sidebar role={userRole} isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+        <Sidebar
+          role={userRole}
+          isOpen={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+        />
         <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
           {children}
         </main>
