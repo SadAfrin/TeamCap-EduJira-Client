@@ -88,4 +88,9 @@ export const ROLE_NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: "Class Routine", href: "/timetable", icon: "timetable" },
     { label: "School Calendar", href: "/calendar", icon: "calendar" },
   ],
+  // 👇 Added the pending state here to satisfy the Record<Role, NavItem[]> type
+  pending: [
+    { label: "Complete Setup", href: "/select-role", icon: "dashboard", badge: "Required" },
+    { label: "About EduJira", href: "/about", icon: "students" },
+  ],
 };
