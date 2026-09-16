@@ -12,6 +12,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   teacher: "Teacher",
   student: "Student",
   parent: "Parent",
+  pending: "Action Required",
 };
 
 export const ROLE_COLORS: Record<
@@ -45,6 +46,13 @@ export const ROLE_COLORS: Record<
     border: "border-amber-200",
     ring: "ring-amber-500/20",
     lightBg: "bg-amber-50",
+  },
+  pending: {
+    bg: "bg-red-600",
+    text: "text-red-700",
+    border: "border-red-200",
+    ring: "ring-red-500/20",
+    lightBg: "bg-red-50",
   },
 };
 

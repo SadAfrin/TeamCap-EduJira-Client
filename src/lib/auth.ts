@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { APIError, betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { emailOTP } from "better-auth/plugins"; // 1. Import the OTP plugin
@@ -20,7 +20,7 @@ const client = new MongoClient(mongoURI);
 
 
 
-const db = client.db("EduJira");
+export const db = client.db("EduJira");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -32,19 +32,49 @@ const transporter = nodemailer.createTransport({
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
+  
   user: {
     additionalFields: {
       role: {
         type: "string",
-        required: true, 
-        defaultValue: "student", 
+        required: false, 
       },
     },
   },
+  
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          return {
+            data: {
+              ...user,
+              role: user.role || "pending", 
+            },
+          };
+        },
+      },
+    },
+  },
+
+  socialProviders: {
+    google: { 
+      clientId: process.env.GOOGLE_CLIENT_ID as string, 
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
+    }, 
+  },
+  
   emailAndPassword: { 
     enabled: true, 
     requireEmailVerification: true,
-  }, 
+    preventUserEnumeration: false, 
+    onExistingUserSignUp: async ({ user }) => {
+      
+      throw new APIError("BAD_REQUEST", {
+        message: "This email is already registered. Please log in instead.",
+      });
+    },
+  },
   
   // 2. This keeps your CLICKABLE LINKS for new sign-ups working perfectly!
   emailVerification: {
@@ -70,7 +100,8 @@ export const auth = betterAuth({
   // 3. This activates the 6-DIGIT OTP system strictly for password resets!
   plugins: [
     emailOTP({ 
-      async sendVerificationOTP({ email, otp, type }) { 
+      // 🚀 THE FIX: Converted to a standard Arrow Function to prevent parser errors
+      sendVerificationOTP: async ({ email, otp, type }) => { 
         if (type === "forget-password") { 
           await transporter.sendMail({
             from: `"EduJira Support" <${process.env.EMAIL_USER}>`,
