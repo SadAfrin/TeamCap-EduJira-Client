@@ -23,6 +23,11 @@ function LoginContent() {
     }
   }, [searchParams]);
 
+  const handleGoogleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    await authClient.signIn.social({ provider: "google" });
+  };
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -47,7 +52,8 @@ function LoginContent() {
 
       if (data) {
         toast.success("Welcome back!");
-        const userRole = (data as { user?: { role?: string } })?.user?.role || "student";
+        const userRole =
+          (data as { user?: { role?: string } })?.user?.role || "student";
         router.push(`/dashboard/${userRole}`);
         router.refresh();
       }
@@ -60,19 +66,19 @@ function LoginContent() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50/50 px-4 py-12 sm:px-6 lg:px-8">
       {/* Dynamic Animated Ambient Orbs */}
-      <motion.div 
+      <motion.div
         animate={{ scale: [1, 1.15, 1], rotate: [0, 90, 0] }}
         transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -top-32 -right-32 -z-10 h-[450px] w-[450px] rounded-full bg-gradient-to-br from-indigo-300/40 to-pink-300/30 blur-3xl" 
+        className="absolute -top-32 -right-32 -z-10 h-[450px] w-[450px] rounded-full bg-gradient-to-br from-indigo-300/40 to-pink-300/30 blur-3xl"
       />
-      <motion.div 
+      <motion.div
         animate={{ scale: [1, 1.2, 1], rotate: [0, -90, 0] }}
         transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -bottom-32 -left-32 -z-10 h-[450px] w-[450px] rounded-full bg-gradient-to-tr from-sky-300/40 to-indigo-300/30 blur-3xl" 
+        className="absolute -bottom-32 -left-32 -z-10 h-[450px] w-[450px] rounded-full bg-gradient-to-tr from-sky-300/40 to-indigo-300/30 blur-3xl"
       />
 
       {/* Main Glass Card */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
@@ -85,7 +91,9 @@ function LoginContent() {
             className="group flex items-center gap-1.5 text-2xl font-black tracking-tight text-slate-900"
           >
             <span>Edu</span>
-            <span className="text-indigo-600 transition-transform group-hover:translate-x-0.5">Jira</span>
+            <span className="text-indigo-600 transition-transform group-hover:translate-x-0.5">
+              Jira
+            </span>
           </Link>
           <h1 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">
             Welcome back
@@ -170,16 +178,18 @@ function LoginContent() {
         </form>
 
         {/* Divider */}
-        <div className="my-6 flex items-center justify-center gap-3">
+        <div className="my-4 flex items-center justify-center gap-3">
           <div className="h-px flex-1 bg-slate-200/80" />
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Or</span>
+          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            Or
+          </span>
           <div className="h-px flex-1 bg-slate-200/80" />
         </div>
 
         {/* SSO Button (Optional UI element for aesthetics) */}
         <button
           type="button"
-          onClick={() => toast.error("Social login feature coming soon!")}
+          onClick={handleGoogleLogin}
           className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white/60 py-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-white hover:border-slate-300"
         >
           <FcGoogle size={18} />
@@ -189,7 +199,10 @@ function LoginContent() {
         {/* Help Footer */}
         <p className="mt-8 text-center text-xs text-slate-500">
           Trouble logging in?{" "}
-          <Link href="/support" className="font-semibold text-indigo-600 hover:underline">
+          <Link
+            href="/support"
+            className="font-semibold text-indigo-600 hover:underline"
+          >
             Contact Support
           </Link>
         </p>

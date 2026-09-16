@@ -2,7 +2,7 @@
 
 import { authClient } from "@/lib/auth-client";
 
-export type Role = "admin" | "teacher" | "student" | "parent";
+export type Role = "admin" | "teacher" | "student" | "parent"| "pending";
 
 export function useAuthRole() {
   const { data: session, isPending } = authClient.useSession();
