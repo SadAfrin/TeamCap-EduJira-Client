@@ -176,12 +176,15 @@ export default function ParentManagementPage() {
       const res = await apiPost(`/api/parents/${id}/link-child`, {
         studentId: selectedStudentId,
         relationship: childRelationship,
+        autoApprove: true,
       });
 
       if (res.success) {
         toast.success("Child linked to parent profile successfully!");
         setLinkChildParent(null);
         fetchParents();
+      } else {
+        toast.error(res.message || "Failed to link child");
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to link child");
