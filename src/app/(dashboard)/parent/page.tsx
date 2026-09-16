@@ -137,7 +137,7 @@ export default function ParentDashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Child Progress", icon: "📈", href: "/dashboard/parent/child-progress", color: "hover:border-amber-300" },
+          { label: "My Profile", icon: "👤", href: "/dashboard/parent/profile", color: "hover:border-amber-300" },
           { label: "Attendance Logs", icon: "📊", href: "/dashboard/parent/attendance", color: "hover:border-blue-300" },
           { label: "Exam Results", icon: "🏆", href: "/dashboard/parent/results", color: "hover:border-purple-300" },
           { label: "Leave Request", icon: "✉️", href: "/dashboard/parent/leave-request", color: "hover:border-emerald-300" },

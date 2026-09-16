@@ -174,12 +174,6 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       description: "Child overview, quick alerts",
     },
     {
-      label: "Child Profile & Progress",
-      href: "/dashboard/parent/child-progress",
-      icon: "child-progress",
-      description: "Overall academic performance monitor",
-    },
-    {
       label: "Attendance Tracker",
       href: "/dashboard/parent/attendance",
       icon: "attendance",
