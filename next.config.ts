@@ -6,10 +6,22 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").rep
 );
 
 const nextConfig: NextConfig = {
+<<<<<<< HEAD
   // Better Auth route matching breaks when trailingSlash is enabled
   trailingSlash: false,
+=======
+  /* config options here */
+  // https://lh3.googleusercontent.com/a/ACg8o
+>>>>>>> 619ecd2a405a7beba7d7653bd8fda7820ed323f0
   images: {
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        port: "",
+        pathname: "/**",
+      },
+      
       {
         protocol: "https",
         hostname: "**",

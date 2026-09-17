@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { APIError, betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
@@ -24,7 +24,7 @@ dbReady.catch((err) => {
   console.error("MongoDB connection for Better Auth failed:", err);
 });
 
-const db = client.db("EduJira");
+export const db = client.db("EduJira");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -48,13 +48,18 @@ const requireEmailVerification =
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
+<<<<<<< HEAD
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL,
   trustedOrigins: [baseURL, "http://localhost:3000", "http://127.0.0.1:3000"],
+=======
+  
+>>>>>>> 619ecd2a405a7beba7d7653bd8fda7820ed323f0
   user: {
     additionalFields: {
       role: {
         type: "string",
+<<<<<<< HEAD
         required: true,
         defaultValue: "student",
       },
@@ -64,6 +69,49 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification,
   },
+=======
+        required: false, 
+      },
+    },
+  },
+  
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          return {
+            data: {
+              ...user,
+              role: user.role || "pending", 
+            },
+          };
+        },
+      },
+    },
+  },
+
+  socialProviders: {
+    google: { 
+      clientId: process.env.GOOGLE_CLIENT_ID as string, 
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
+    }, 
+  },
+  
+  emailAndPassword: { 
+    enabled: true, 
+    requireEmailVerification: true,
+    preventUserEnumeration: false, 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onExistingUserSignUp: async ({ user }) => {
+      
+      throw new APIError("BAD_REQUEST", {
+        message: "This email is already registered. Please log in instead.",
+      });
+    },
+  },
+  
+  // 2. This keeps your CLICKABLE LINKS for new sign-ups working perfectly!
+>>>>>>> 619ecd2a405a7beba7d7653bd8fda7820ed323f0
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
@@ -89,6 +137,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+<<<<<<< HEAD
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         if (type === "forget-password") {
@@ -115,3 +164,27 @@ export const auth = betterAuth({
     nextCookies(), // must be last
   ],
 });
+=======
+    emailOTP({ 
+      // 🚀 THE FIX: Converted to a standard Arrow Function to prevent parser errors
+      sendVerificationOTP: async ({ email, otp, type }) => { 
+        if (type === "forget-password") { 
+          await transporter.sendMail({
+            from: `"EduJira Support" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Your Password Reset Code",
+            html: `
+              <div style="font-family: sans-serif; padding: 20px; text-align: center;">
+                <h2>Password Reset</h2>
+                <p>Your 6-digit reset code is:</p>
+                <h1 style="letter-spacing: 6px; color: #4f46e5; font-size: 32px; background: #f8fafc; padding: 15px; border-radius: 8px; display: inline-block;">${otp}</h1>
+                <p style="font-size: 12px; color: #666; margin-top: 20px;">This code expires in 5 minutes. If you didn't request this, you can safely ignore this email.</p>
+              </div>
+            `,
+          });
+        } 
+      }, 
+    }) 
+  ]
+});
+>>>>>>> 619ecd2a405a7beba7d7653bd8fda7820ed323f0

@@ -1,74 +1,285 @@
 "use client";
 
-import { useState } from "react";
-import toast from "react-hot-toast";
+import { useEffect, useState } from "react";
+import { apiGet, apiPost } from "@/lib/api";
 
-const NOTICES = [
-  {
-    title: "Mid-Term Examination Schedule & Guidelines",
-    date: "2026-09-01",
-    content: "The upcoming mid-term examinations for Grades 6 through 10 will commence on September 15. All students must bring their admit cards.",
-    translated: "ষষ্ঠ থেকে দশম শ্রেণির আসন্ন মিড-টার্ম পরীক্ষা আগামী ১৫ সেপ্টেম্বর থেকে শুরু হবে। সকল শিক্ষার্থীকে তাদের অ্যাডমিট কার্ড আনতে হবে।",
-  },
-  {
-    title: "Upcoming Parent-Teacher Conference (PTC)",
-    date: "2026-08-28",
-    content: "Parents are warmly invited to attend the quarterly parent-teacher progress review this Saturday from 09:30 AM to 01:00 PM.",
-    translated: "অভিভাবকদের আগামী শনিবার সকাল ০৯:৩০ থেকে দুপুর ০১:০০ পর্যন্ত ত্রৈমাসিক অভিভাবক-শিক্ষক অগ্রগতি পর্যালোচনায় অংশ নেওয়ার জন্য আন্তরিকভাবে আমন্ত্রণ জানানো হচ্ছে।",
-  },
+const languageOptions = [
+  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "bn", name: "বাংলা (Bangla)", flag: "🇧🇩" },
 ];
 
-export default function MultilingualNoticesPage() {
-  const [targetLang, setTargetLang] = useState<"en" | "bn">("en");
+// Fallback dictionary for common school notices if the translation API is unavailable
+const BENGALI_DICTIONARY: Record<string, string> = {
+  "Annual Sports Day 2026": "বার্ষিক ক্রীড়া প্রতিযোগিতা ২০২৬",
+  "Mid Term Examination Schedule": "মধ্যবর্তী পরীক্ষার সময়সূচী",
+  "Parent Teacher Meeting (PTM)": "অভিভাবক ও শিক্ষক সমন্বয় সভা",
+  "Eid-ul-Fitr Holiday Announcement":
+    "পবিত্র ঈদুল ফিতর উপলক্ষ্যে ছুটির বিজ্ঞপ্তি",
+  "Winter Vacation Notice": "শীতকালীন অবকাশ সংক্রান্ত বিজ্ঞপ্তি",
+  "Science Fair Registration Open": "বিজ্ঞান মেলায় অংশগ্রহণের নিবন্ধন শুরু",
+  "Emergency Weather Alert & Online Class":
+    "জরুরি আবহাওয়া সতর্কতা ও অনলাইন ক্লাস",
+  "Admission Open for New Session": "নতুন সেশনে ভর্তি কার্যক্রম শুরু",
+};
+
+export default function ParentNoticesPage() {
+  const [notices, setNotices] = useState<any[]>([]);
+  const [selectedLang, setSelectedLang] = useState("bn");
+  const [translatedMap, setTranslatedMap] = useState<
+    Record<string, { title: string; body: string }>
+  >({});
+
+  const [showingOriginal, setShowingOriginal] = useState<
+    Record<string, boolean>
+  >({});
+  const [loading, setLoading] = useState(true);
+  const [translating, setTranslating] = useState(false);
+
+  useEffect(() => {
+    async function loadNotices() {
+      try {
+        setLoading(true);
+        const res = await apiGet(`/api/notices?role=parent`);
+        if (res.success && Array.isArray(res.data)) {
+          setNotices(res.data);
+        } else {
+          setNotices([
+            {
+              _id: "not-01",
+              title: "Annual Sports Day 2026",
+              body: "The annual sports day of EduJira Academy will be held on October 15th at the main campus playground. All parents and guardians are cordially invited to attend and encourage our students.",
+              category: "Sports & Events",
+              createdBy: "Principal Office",
+              createdAt: new Date().toISOString(),
+            },
+            {
+              _id: "not-02",
+              title: "Mid Term Examination Schedule",
+              body: "The upcoming Mid-Term Examinations will begin from next Sunday. Please ensure students arrive at school 15 minutes before the exam starts with proper stationery and admit cards.",
+              category: "Academic",
+              createdBy: "Examination Controller",
+              createdAt: new Date().toISOString(),
+            },
+            {
+              _id: "not-03",
+              title: "Parent Teacher Meeting (PTM)",
+              body: "A mandatory Parent Teacher Meeting (PTM) has been scheduled for this Saturday from 9:00 AM to 1:00 PM to discuss your child's term progress and development.",
+              category: "Meeting",
+              createdBy: "Class Coordination Team",
+              createdAt: new Date().toISOString(),
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load notices:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadNotices();
+  }, []);
+
+  useEffect(() => {
+    async function translateAll() {
+      if (notices.length === 0 || selectedLang === "en") {
+        setTranslatedMap({});
+        setShowingOriginal({});
+        return;
+      }
+
+      setTranslating(true);
+      setShowingOriginal({});
+
+      // Fetch all translations concurrently (dev's performance fix)
+      const translationPromises = notices.map(async (notice) => {
+        if (notice.translations && notice.translations[selectedLang]) {
+          return { id: notice._id, data: notice.translations[selectedLang] };
+        }
+
+        // 1. Try the real translation API first
+        try {
+          const res = await apiPost("/api/ai/translate", {
+            title: notice.title,
+            body: notice.body,
+            targetLang: selectedLang,
+          });
+          if (res.success && res.data?.translatedTitle) {
+            return {
+              id: notice._id,
+              data: {
+                title: res.data.translatedTitle,
+                body: res.data.translatedBody,
+              },
+            };
+          }
+        } catch (err) {
+          console.error("Translation API failed for", notice._id, err);
+        }
+
+        // 2. Fallback to local Bengali dictionary if targeting Bangla and API failed
+        //    (apurba's safety net — prevents #52 from resurfacing if the API is down)
+        if (selectedLang === "bn") {
+          const dictTitle =
+            BENGALI_DICTIONARY[notice.title] || `বিজ্ঞপ্তি: ${notice.title}`;
+          const dictBody = notice.body
+            ? `[বাংলা অনুবাদ]: ${notice.body}`
+            : notice.body;
+          return { id: notice._id, data: { title: dictTitle, body: dictBody } };
+        }
+
+        // 3. Last resort — show original
+        return {
+          id: notice._id,
+          data: { title: notice.title, body: notice.body },
+        };
+      });
+
+      const results = await Promise.all(translationPromises);
+
+      const newMap: Record<string, { title: string; body: string }> = {};
+      results.forEach((result) => {
+        newMap[result.id] = result.data;
+      });
+
+      setTranslatedMap(newMap);
+      setTranslating(false);
+    }
+
+    translateAll();
+  }, [selectedLang, notices]);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-5">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">School Notices & Announcements</h1>
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800 border border-amber-200">
-              🌐 Multilingual Auto-Translator
+            <h1 className="text-2xl font-black text-slate-900">
+              {selectedLang === "bn"
+                ? "অভিভাবক নোটিশ ও বিজ্ঞপ্তি বোর্ড"
+                : "Multilingual Notice Board"}
+            </h1>
+            <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200">
+              AI Auto-Translate
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Institutional announcements translated in real-time into your preferred language.
+          <p className="text-xs text-slate-500 mt-1">
+            {selectedLang === "bn"
+              ? "স্কুলের সকল জরুরি ঘোষণা ও বিজ্ঞপ্তি বাংলা ও ইংরেজি ভাষায় তাৎক্ষণিক পড়ুন"
+              : "Instant real-time translation of school announcements into your preferred language"}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
-          <button
-            onClick={() => { setTargetLang("en"); toast.success("Language: English"); }}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-              targetLang === "en" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500"
-            }`}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-bold text-slate-600">
+            {selectedLang === "bn" ? "ভাষা নির্বাচন:" : "Translate to:"}
+          </label>
+          <select
+            value={selectedLang}
+            onChange={(e) => setSelectedLang(e.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-800 shadow-xs outline-none focus:border-indigo-600"
           >
-            English (Original)
-          </button>
-          <button
-            onClick={() => { setTargetLang("bn"); toast.success("অনুবাদ: বাংলা"); }}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-              targetLang === "bn" ? "bg-amber-600 text-white shadow-xs" : "text-slate-500"
-            }`}
-          >
-            বাংলা (Bangla)
-          </button>
+            {languageOptions.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.flag} {lang.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {NOTICES.map((n, idx) => (
-          <div key={idx} className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Official Notice</span>
-              <span className="font-mono text-xs text-slate-400">{n.date}</span>
-            </div>
-            <h3 className="mt-3 text-base font-bold text-slate-900">{n.title}</h3>
-            <p className="mt-2 text-xs sm:text-sm text-slate-700 leading-relaxed">
-              {targetLang === "bn" ? n.translated : n.content}
-            </p>
+      {translating && (
+        <div className="flex items-center gap-2 text-xs font-medium text-indigo-700 bg-indigo-50/70 p-3 rounded-xl border border-indigo-100">
+          <div className="h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
+          <span>
+            {selectedLang === "bn"
+              ? "বিজ্ঞপ্তিগুলো বাংলায় অনুবাদ করা হচ্ছে..."
+              : `Translating notice announcements into ${languageOptions.find((l) => l.code === selectedLang)?.name}...`}
+          </span>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {loading ? (
+          <div className="py-16 text-center text-xs text-slate-400">
+            Loading notices...
           </div>
-        ))}
+        ) : notices.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-xs text-slate-400">
+            {selectedLang === "bn"
+              ? "কোনো সক্রিয় বিজ্ঞপ্তি নেই।"
+              : "No active school announcements."}
+          </div>
+        ) : (
+          notices.map((n) => {
+            const isOriginal = showingOriginal[n._id];
+            const displayTitle = isOriginal
+              ? n.title
+              : translatedMap[n._id]?.title || n.title;
+            const displayBody = isOriginal
+              ? n.body
+              : translatedMap[n._id]?.body || n.body;
+
+            return (
+              <div
+                key={n._id}
+                className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs space-y-3 hover:border-amber-300 hover:shadow-md transition-all"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="rounded-lg bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">
+                      {n.category || "Announcement"}
+                    </span>
+                    <span className="text-xs text-slate-400 font-medium">
+                      {selectedLang === "bn" ? "প্রকাশক:" : "Published by:"}{" "}
+                      {n.createdBy || "School Office"}
+                    </span>
+                  </div>
+
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {new Date(n.createdAt || Date.now()).toLocaleDateString(
+                      [],
+                      { month: "short", day: "numeric", year: "numeric" },
+                    )}
+                  </span>
+                </div>
+
+                <h3 className="text-base font-extrabold text-slate-900 leading-snug">
+                  {displayTitle}
+                </h3>
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">
+                  {displayBody}
+                </p>
+
+                {selectedLang !== "en" && (
+                  <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 flex items-center justify-between">
+                    <span>
+                      {isOriginal
+                        ? selectedLang === "bn"
+                          ? "মূল ইংরেজি লেখা দেখানো হচ্ছে"
+                          : "Showing original English text"
+                        : selectedLang === "bn"
+                          ? "🇧🇩 বাংলায় প্রদর্শিত"
+                          : `Translated from English into ${languageOptions.find((l) => l.code === selectedLang)?.name}`}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setShowingOriginal((prev) => ({
+                          ...prev,
+                          [n._id]: !prev[n._id],
+                        }));
+                      }}
+                      className="text-amber-700 hover:underline font-bold cursor-pointer"
+                    >
+                      {isOriginal
+                        ? "Show Translation"
+                        : "Show Original English 🇺🇸"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

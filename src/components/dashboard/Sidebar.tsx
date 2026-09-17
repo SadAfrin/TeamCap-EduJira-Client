@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { UserRole, RoleType, NavItem } from "@/types/navigation";
 import { ROLE_NAVIGATION_CONFIG, ROLE_DETAILS } from "@/config/navigation";
+import UserAvatar from "@/components/common/UserAvatar";
 
 type SidebarProps = {
   role?: RoleType;
@@ -121,6 +121,12 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
           </svg>
         );
+      case "profile":
+        return (
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.75" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.964 0a9 9 0 10-11.963 0m11.964 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        );
       default:
         return (
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.75" stroke="currentColor">
@@ -149,16 +155,12 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
         {/* User Card */}
         <div className="mx-3 my-3.5 rounded-xl border border-slate-200/90 bg-slate-50/80 p-3">
           <div className="flex items-center gap-3">
-            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-indigo-200 bg-white">
-              <Image
-                src={user?.image || "/profile.png"}
-                width={36}
-                height={36}
-                alt={user?.name || "User"}
-                className="h-full w-full object-cover"
-                unoptimized
-              />
-            </div>
+            <UserAvatar
+              src={user?.image}
+              name={user?.name}
+              role={currentRole}
+              size={36}
+            />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold text-slate-900">{user?.name || "User"}</p>
               <div className="mt-0.5 flex items-center gap-1.5">
@@ -223,14 +225,14 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
   return (
     <>
       {/* Desktop static sidebar */}
-      <aside className="hidden w-68 shrink-0 flex-col border-r border-slate-200/80 bg-white md:flex">
+      <aside className="hidden w-68 shrink-0 flex-col border-r border-slate-200/80 bg-white md:flex print:hidden">
         {sidebarContent}
       </aside>
 
       {/* Mobile Drawer Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs md:hidden print:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -238,7 +240,7 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
 
       {/* Mobile Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-76 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-76 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out md:hidden print:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
