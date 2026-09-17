@@ -17,7 +17,7 @@ export default function ParentDashboard() {
   const [selectedChildIndex, setSelectedChildIndex] = useState(0);
   const [notices, setNotices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [childStats, setChildStats] = useState<any>(null);
   const [childRoutine, setChildRoutine] = useState<any[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -72,7 +72,7 @@ export default function ParentDashboard() {
           attendance: attendanceRes.success ? attendanceRes.data : null,
           results: resultsRes.success ? resultsRes.data : null,
         });
-        
+
         if (routineRes.success && routineRes.data.length > 0) {
            setChildRoutine(routineRes.data[0].periodSlots || []);
         } else {

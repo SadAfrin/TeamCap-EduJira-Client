@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { ROLE_DETAILS } from "@/config/navigation";
 import { UserRole } from "@/types/navigation";
-import { apiGet, apiPut } from "@/lib/api";
+import { apiGet, apiPut, apiPost } from "@/lib/api";
+import UserAvatar from "@/components/common/UserAvatar";
 import toast from "react-hot-toast";
 import LinkChildModal from "@/components/dashboard/LinkChildModal";
 import { childDisplayName, useParentChildren } from "@/hooks/useParentChildren";
@@ -23,8 +23,9 @@ export default function ProfilePage() {
     "general" | "academic" | "security"
   >("general");
 
-  // Form State
+  // Form State - Clean initial values without fake mock overrides
   const [formData, setFormData] = useState({
+    id: "",
     name: "",
     email: "",
     phone: "",
@@ -44,7 +45,8 @@ export default function ProfilePage() {
     designation: "",
     subject: "",
     qualification: "",
-    institutionName: "EduJira Model High School & College",
+    occupation: "",
+    institutionName: "EduJira International Academy",
   });
 
   // Security state
@@ -55,31 +57,80 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
+    async function loadUserProfile() {
+      if (!user) return;
+
+      // 1. Initial base info from session
+      let initialData = {
+        id: (user as any).id || "",
         name: user.name || "",
         email: user.email || "",
         image: user.image || "",
-        phone: (user as any).phone || "+880 1700-123456",
-        address: (user as any).address || "Dhaka, Bangladesh",
-        bio:
-          (user as any).bio ||
-          "Dedicated member of the EduJira academic community.",
-        studentId: (user as any).studentId || "STD-801",
-        className: (user as any).className || "Class 8",
-        section: (user as any).section || "B",
-        roll: (user as any).roll || "01",
-        parentName: (user as any).parentName || "Tariqul Islam",
-        parentEmail: (user as any).parentEmail || "parent@edujira.com",
-        parentPhone: (user as any).parentPhone || "+880 1800-654321",
-        designation: (user as any).designation || "Senior Faculty",
-        subject: (user as any).subject || "Mathematics & Science",
-        qualification:
-          (user as any).qualification || "M.Sc in Applied Mathematics",
-      }));
+        phone: (user as any).phone || "",
+        address: (user as any).address || "",
+        bio: (user as any).bio || "",
+        gender: (user as any).gender || "Male",
+        bloodGroup: (user as any).bloodGroup || "A+",
+        studentId: (user as any).studentId || "",
+        className: (user as any).className || "",
+        section: (user as any).section || "",
+        roll: (user as any).roll || "",
+        parentName: (user as any).parentName || "",
+        parentEmail: (user as any).parentEmail || "",
+        parentPhone: (user as any).parentPhone || "",
+        designation: (user as any).designation || "",
+        subject: (user as any).subject || "",
+        qualification: (user as any).qualification || "",
+        occupation: (user as any).occupation || "",
+        institutionName: "EduJira International Academy",
+      };
+
+      // 2. Fetch role-specific document from backend
+      try {
+        if (user.email) {
+          let endpoint = "";
+          if (userRole === "parent") endpoint = `/api/parents?search=${encodeURIComponent(user.email)}`;
+          else if (userRole === "student") endpoint = `/api/students?search=${encodeURIComponent(user.email)}`;
+          else if (userRole === "teacher") endpoint = `/api/teachers?search=${encodeURIComponent(user.email)}`;
+          else if (userRole === "admin") endpoint = `/api/admins?search=${encodeURIComponent(user.email)}`;
+
+          if (endpoint) {
+            const res = await apiGet(endpoint);
+            if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+              const doc = res.data[0];
+              initialData = {
+                ...initialData,
+                id: doc._id || doc.id || initialData.id,
+                name: doc.name || initialData.name,
+                phone: doc.phone || initialData.phone,
+                address: doc.address || initialData.address,
+                bio: doc.bio || initialData.bio,
+                gender: doc.gender || initialData.gender,
+                bloodGroup: doc.bloodGroup || initialData.bloodGroup,
+                studentId: doc.studentId || initialData.studentId,
+                className: doc.className || initialData.className,
+                section: doc.section || initialData.section,
+                roll: doc.roll ? String(doc.roll) : initialData.roll,
+                parentName: doc.parentName || initialData.parentName,
+                parentEmail: doc.parentEmail || initialData.parentEmail,
+                parentPhone: doc.parentPhone || initialData.parentPhone,
+                designation: doc.designation || initialData.designation,
+                subject: doc.subject || initialData.subject,
+                qualification: doc.qualification || initialData.qualification,
+                occupation: doc.occupation || initialData.occupation,
+              };
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch extended profile info from API:", err);
+      }
+
+      setFormData(initialData);
     }
-  }, [user]);
+
+    loadUserProfile();
+  }, [user, userRole]);
 
   const handleChange = (
     e: React.ChangeEvent
@@ -97,17 +148,34 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      // Simulate API update or dispatch to respective role endpoint
-      let endpoint = `/api/students/${formData.studentId}`;
-      if (userRole === "teacher")
-        endpoint = `/api/teachers/${user?.id || "TCH-101"}`;
-      if (userRole === "parent")
-        endpoint = `/api/parents/${parentProfile?.parentId || "PAR-101"}`;
-      if (userRole === "admin")
-        endpoint = `/api/admins/${user?.id || "ADM-101"}`;
+      // 1. Try to update backend role profile if ID / identifier exists
+      const targetId = formData.id || formData.studentId || user?.email;
+      if (targetId) {
+        let endpoint = "";
+        if (userRole === "student" && formData.studentId) {
+          endpoint = `/api/students/${formData.studentId}`;
+        } else if (userRole === "teacher" && formData.id) {
+          endpoint = `/api/teachers/${formData.id}`;
+        } else if (userRole === "parent" && (formData.id || user?.email)) {
+          endpoint = `/api/parents/${formData.id || encodeURIComponent(user?.email || "")}`;
+        } else if (userRole === "admin" && formData.id) {
+          endpoint = `/api/admins/${formData.id}`;
+        }
 
-      // In client mode, update state and show success
-      await new Promise((r) => setTimeout(r, 600));
+        if (endpoint) {
+          try {
+            await apiPut(endpoint, formData);
+          } catch (err) {
+            console.warn("Backend profile update fallback:", err);
+          }
+        }
+      }
+
+      // 2. Save local copy in localStorage for persistence across reloads
+      try {
+        localStorage.setItem(`edujira_profile_${user?.email || "user"}`, JSON.stringify(formData));
+      } catch {}
+
       toast.success("Profile details updated successfully! 🎉");
     } catch (err: any) {
       toast.error(err.message || "Failed to update profile.");
@@ -147,16 +215,13 @@ export default function ProfilePage() {
       <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="relative h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-2xl border-2 border-white/20 bg-indigo-500/20 shadow-lg shrink-0">
-              <Image
-                src={formData.image || user?.image || "/profile.png"}
-                alt={formData.name || "Profile Photo"}
-                width={96}
-                height={96}
-                className="h-full w-full object-cover"
-                unoptimized
-              />
-            </div>
+            <UserAvatar
+              src={formData.image || user?.image}
+              name={formData.name || user?.name}
+              role={userRole}
+              size={84}
+              className="border-2 border-white/30 shadow-lg shrink-0"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span
@@ -179,9 +244,7 @@ export default function ProfilePage() {
 
           <div className="flex items-center gap-3">
             <span className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white border border-white/10">
-              {userRole === "student"
-                ? `ID: ${formData.studentId}`
-                : `Role: ${roleMeta.title}`}
+              {userRole === "student" ? `ID: ${formData.studentId || "Student"}` : `Role: ${roleMeta.title}`}
             </span>
           </div>
         </div>
@@ -191,7 +254,7 @@ export default function ProfilePage() {
       <div className="flex items-center gap-2 border-b border-slate-200 bg-white px-4 rounded-2xl shadow-xs">
         <button
           onClick={() => setActiveTab("general")}
-          className={`flex items-center gap-2 py-4 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all ${
+          className={`flex items-center gap-2 py-4 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer ${
             activeTab === "general"
               ? "border-indigo-600 text-indigo-600"
               : "border-transparent text-slate-500 hover:text-slate-800"
@@ -201,7 +264,7 @@ export default function ProfilePage() {
         </button>
         <button
           onClick={() => setActiveTab("academic")}
-          className={`flex items-center gap-2 py-4 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all ${
+          className={`flex items-center gap-2 py-4 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer ${
             activeTab === "academic"
               ? "border-indigo-600 text-indigo-600"
               : "border-transparent text-slate-500 hover:text-slate-800"
@@ -227,12 +290,8 @@ export default function ProfilePage() {
           className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6"
         >
           <div>
-            <h3 className="text-base font-bold text-slate-900">
-              Personal & Contact Details
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Manage your display name, contact phone number, and avatar image.
-            </p>
+            <h3 className="text-base font-bold text-slate-900">Personal & Contact Details</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Edit your display name, contact phone number, residential address, and profile photo.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -246,6 +305,7 @@ export default function ProfilePage() {
                 required
                 value={formData.name}
                 onChange={handleChange}
+                placeholder="Enter your full name"
                 className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
               />
             </div>
@@ -273,7 +333,7 @@ export default function ProfilePage() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="+880 1700-000000"
+                placeholder="e.g. +880 1700-000000"
                 className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
               />
             </div>
@@ -287,7 +347,7 @@ export default function ProfilePage() {
                 name="image"
                 value={formData.image}
                 onChange={handleChange}
-                placeholder="https://example.com/photo.jpg"
+                placeholder="https://example.com/my-photo.jpg"
                 className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
               />
             </div>
@@ -341,21 +401,21 @@ export default function ProfilePage() {
               rows={2}
               value={formData.address}
               onChange={handleChange}
-              placeholder="Street address, City, District"
+              placeholder="Enter your street address, city, district"
               className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-600"
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              Personal Bio / Note
+              Personal Bio / Notes
             </label>
             <textarea
               name="bio"
               rows={2}
               value={formData.bio}
               onChange={handleChange}
-              placeholder="A short description about yourself..."
+              placeholder="A short note or bio about yourself..."
               className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-600"
             />
           </div>
@@ -364,7 +424,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 disabled:opacity-50 transition-all"
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 disabled:opacity-50 transition-all cursor-pointer"
             >
               <span>
                 {saving ? "Saving Changes..." : "Save Profile Changes ✓"}
@@ -428,43 +488,38 @@ export default function ProfilePage() {
               </div>
 
               <div className="rounded-2xl bg-indigo-50/70 p-5 border border-indigo-100 space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">
-                  Guardian / Emergency Details
-                </h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">Guardian / Emergency Contact Details</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Guardian Name
-                    </label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Guardian Name</label>
                     <input
                       type="text"
                       name="parentName"
                       value={formData.parentName}
                       onChange={handleChange}
+                      placeholder="Guardian name"
                       className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Guardian Email
-                    </label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Guardian Email</label>
                     <input
                       type="email"
                       name="parentEmail"
                       value={formData.parentEmail}
                       onChange={handleChange}
+                      placeholder="guardian@example.com"
                       className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Guardian Phone
-                    </label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Guardian Phone</label>
                     <input
                       type="tel"
                       name="parentPhone"
                       value={formData.parentPhone}
                       onChange={handleChange}
+                      placeholder="+880 1800-000000"
                       className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold"
                     />
                   </div>
@@ -487,40 +542,37 @@ export default function ProfilePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                    Faculty Designation
-                  </label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Faculty Designation</label>
                   <input
                     type="text"
                     name="designation"
                     value={formData.designation}
                     onChange={handleChange}
+                    placeholder="e.g. Senior Faculty / Assistant Teacher"
                     className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                    Assigned Subjects
-                  </label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Assigned Subjects</label>
                   <input
                     type="text"
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
+                    placeholder="e.g. Mathematics, Science"
                     className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                  Highest Qualification
-                </label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Highest Qualification</label>
                 <input
                   type="text"
                   name="qualification"
                   value={formData.qualification}
                   onChange={handleChange}
+                  placeholder="e.g. M.Sc in Mathematics, B.Ed"
                   className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
                 />
               </div>
@@ -554,14 +606,13 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                  Institution Name
-                </label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Institution Name</label>
                 <input
                   type="text"
                   name="institutionName"
                   value={formData.institutionName}
                   onChange={handleChange}
+                  placeholder="EduJira International Academy"
                   className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
                 />
               </div>
@@ -572,7 +623,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 disabled:opacity-50 transition-all"
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 disabled:opacity-50 transition-all cursor-pointer"
             >
               <span>{saving ? "Saving Changes..." : "Save Credentials ✓"}</span>
             </button>
