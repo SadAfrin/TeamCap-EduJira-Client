@@ -12,6 +12,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   teacher: "Teacher",
   student: "Student",
   parent: "Parent",
+  pending: "Action Required",
 };
 
 export const ROLE_COLORS: Record<
@@ -46,6 +47,13 @@ export const ROLE_COLORS: Record<
     ring: "ring-amber-500/20",
     lightBg: "bg-amber-50",
   },
+  pending: {
+    bg: "bg-red-600",
+    text: "text-red-700",
+    border: "border-red-200",
+    ring: "ring-red-500/20",
+    lightBg: "bg-red-50",
+  },
 };
 
 export const ROLE_NAV_ITEMS: Record<Role, NavItem[]> = {
@@ -79,5 +87,10 @@ export const ROLE_NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: "Child Attendance", href: "/parent/attendance", icon: "attendance" },
     { label: "Class Routine", href: "/timetable", icon: "timetable" },
     { label: "School Calendar", href: "/calendar", icon: "calendar" },
+  ],
+  // 👇 Added the pending state here to satisfy the Record<Role, NavItem[]> type
+  pending: [
+    { label: "Complete Setup", href: "/select-role", icon: "dashboard", badge: "Required" },
+    { label: "About EduJira", href: "/about", icon: "students" },
   ],
 };

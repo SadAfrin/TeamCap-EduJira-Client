@@ -7,14 +7,21 @@ import { UserRole } from "@/types/navigation";
 import { apiGet, apiPut, apiPost } from "@/lib/api";
 import UserAvatar from "@/components/common/UserAvatar";
 import toast from "react-hot-toast";
+import LinkChildModal from "@/components/dashboard/LinkChildModal";
+import { childDisplayName, useParentChildren } from "@/hooks/useParentChildren";
 
 export default function ProfilePage() {
   const { role, user, isLoading } = useAuthRole();
   const userRole = (role?.toLowerCase() as UserRole) || UserRole.STUDENT;
   const roleMeta = ROLE_DETAILS[userRole] || ROLE_DETAILS[UserRole.STUDENT];
 
+  const { parent: parentProfile } = useParentChildren();
+
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"general" | "academic" | "security">("general");
+  const [activeTab, setActiveTab] = useState
+    "general" | "academic" | "security"
+  >("general");
 
   // Form State - Clean initial values without fake mock overrides
   const [formData, setFormData] = useState({
@@ -125,7 +132,11 @@ export default function ProfilePage() {
     loadUserProfile();
   }, [user, userRole]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -175,7 +186,10 @@ export default function ProfilePage() {
 
   const handleUpdatePassword = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passwords.newPassword || passwords.newPassword !== passwords.confirmPassword) {
+    if (
+      !passwords.newPassword ||
+      passwords.newPassword !== passwords.confirmPassword
+    ) {
       toast.error("New passwords do not match.");
       return;
     }
@@ -210,13 +224,21 @@ export default function ProfilePage() {
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className={`inline-flex rounded-md px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider ${roleMeta.color.lightBg} ${roleMeta.color.text} border ${roleMeta.color.border}`}>
+                <span
+                  className={`inline-flex rounded-md px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider ${roleMeta.color.lightBg} ${roleMeta.color.text} border ${roleMeta.color.border}`}
+                >
                   {userRole} Workspace
                 </span>
-                <span className="text-xs text-slate-400">• Verified Account</span>
+                <span className="text-xs text-slate-400">
+                  • Verified Account
+                </span>
               </div>
-              <h1 className="mt-1.5 text-2xl sm:text-3xl font-black tracking-tight">{formData.name || user?.name || "User Profile"}</h1>
-              <p className="text-xs sm:text-sm text-slate-300 font-mono mt-0.5">{formData.email || user?.email}</p>
+              <h1 className="mt-1.5 text-2xl sm:text-3xl font-black tracking-tight">
+                {formData.name || user?.name || "User Profile"}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 font-mono mt-0.5">
+                {formData.email || user?.email}
+              </p>
             </div>
           </div>
 
@@ -248,23 +270,25 @@ export default function ProfilePage() {
               : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
-          <span>🎓 {userRole === "student" ? "Academic & Guardian" : userRole === "teacher" ? "Teaching Credentials" : userRole === "parent" ? "Guardian & Child Info" : "Institutional Info"}</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("security")}
-          className={`flex items-center gap-2 py-4 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer ${
-            activeTab === "security"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <span>🔒 Security & Password</span>
+          <span>
+            🎓{" "}
+            {userRole === "student"
+              ? "Academic & Guardian"
+              : userRole === "teacher"
+                ? "Teaching Credentials"
+                : userRole === "parent"
+                  ? "Children & Emergency"
+                  : "Institutional Info"}
+          </span>
         </button>
       </div>
 
       {/* Tab 1: General Info */}
       {activeTab === "general" && (
-        <form onSubmit={handleSaveProfile} className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+        <form
+          onSubmit={handleSaveProfile}
+          className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6"
+        >
           <div>
             <h3 className="text-base font-bold text-slate-900">Personal & Contact Details</h3>
             <p className="text-xs text-slate-500 mt-0.5">Edit your display name, contact phone number, residential address, and profile photo.</p>
@@ -402,7 +426,9 @@ export default function ProfilePage() {
               disabled={saving}
               className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 disabled:opacity-50 transition-all cursor-pointer"
             >
-              <span>{saving ? "Saving Changes..." : "Save Profile Changes ✓"}</span>
+              <span>
+                {saving ? "Saving Changes..." : "Save Profile Changes ✓"}
+              </span>
             </button>
           </div>
         </form>
@@ -410,46 +436,53 @@ export default function ProfilePage() {
 
       {/* Tab 2: Role Specific Info */}
       {activeTab === "academic" && (
-        <form onSubmit={handleSaveProfile} className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+        <form
+          onSubmit={handleSaveProfile}
+          className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6"
+        >
           {userRole === "student" && (
             <>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Academic & Guardian Information</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Assigned academic division and emergency guardian contacts.</p>
+                <h3 className="text-base font-bold text-slate-900">
+                  Academic & Guardian Information
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Assigned academic division and emergency guardian contacts.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Assigned Class</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Assigned Class
+                  </label>
                   <input
                     type="text"
-                    name="className"
+                    disabled
                     value={formData.className}
-                    onChange={handleChange}
-                    placeholder="e.g. Class 8"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-700"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Section</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Section
+                  </label>
                   <input
                     type="text"
-                    name="section"
-                    value={formData.section}
-                    onChange={handleChange}
-                    placeholder="e.g. B"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700"
+                    disabled
+                    value={`Section ${formData.section}`}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-700"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Class Roll No</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Class Roll No
+                  </label>
                   <input
                     type="text"
-                    name="roll"
-                    value={formData.roll}
-                    onChange={handleChange}
-                    placeholder="e.g. 01"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700"
+                    disabled
+                    value={`Roll #${formData.roll}`}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-700"
                   />
                 </div>
               </div>
@@ -498,8 +531,13 @@ export default function ProfilePage() {
           {userRole === "teacher" && (
             <>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Faculty & Teaching Credentials</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Your institutional designations, subject assignments, and qualifications.</p>
+                <h3 className="text-base font-bold text-slate-900">
+                  Faculty & Teaching Credentials
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Your institutional designations, subject assignments, and
+                  qualifications.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -544,53 +582,27 @@ export default function ProfilePage() {
           {userRole === "parent" && (
             <>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Parent & Guardian Information</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Guardian details, occupation, and linked children information.</p>
+                <h3 className="text-base font-bold text-slate-900">
+                  Parent & Guardian Information
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Enrolled children and school communication settings.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Occupation</label>
-                  <input
-                    type="text"
-                    name="occupation"
-                    value={formData.occupation}
-                    onChange={handleChange}
-                    placeholder="e.g. Business / Service"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Emergency Contact Phone</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+880 1700-000000"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 space-y-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-amber-900">Linked Student Child</p>
-                <div className="flex items-center justify-between bg-white p-3.5 rounded-xl border border-amber-100">
-                  <div>
-                    <h5 className="font-bold text-slate-900 text-sm">Rahim Uddin (Student ID: STD-801)</h5>
-                    <p className="text-xs text-slate-500">Class 8 – Section B • Roll #01</p>
-                  </div>
-                  <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Enrolled ✓</span>
-                </div>
-              </div>
+              <ParentLinkedChildrenCard />
             </>
           )}
 
           {userRole === "admin" && (
             <>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Institutional Administration</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Principal and high-level system configurations.</p>
+                <h3 className="text-base font-bold text-slate-900">
+                  Institutional Administration
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Principal and high-level system configurations.
+                </p>
               </div>
 
               <div>
@@ -618,62 +630,61 @@ export default function ProfilePage() {
           </div>
         </form>
       )}
+    </div>
+  );
+}
 
-      {/* Tab 3: Security & Password */}
-      {activeTab === "security" && (
-        <form onSubmit={handleUpdatePassword} className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Account Security & Credentials</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Update your password to keep your EduJira account secure.</p>
-          </div>
+function ParentLinkedChildrenCard() {
+  const { parent, children, approvedChildren, loading, reload } = useParentChildren();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-          <div className="max-w-md space-y-4">
+  if (loading) {
+    return <p className="text-xs text-slate-500">Loading linked children...</p>;
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-amber-900">Linked Student Children</p>
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="rounded-lg bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-amber-500"
+        >
+          + Add / Link Child
+        </button>
+      </div>
+
+      {approvedChildren.length === 0 ? (
+        <p className="text-xs text-slate-500 bg-white p-3 rounded-xl border border-amber-100">
+          No child linked yet. Verify a student from the school database to continue.
+        </p>
+      ) : (
+        approvedChildren.map((child) => (
+          <div
+            key={child.studentId}
+            className="flex items-center justify-between bg-white p-3 rounded-xl border border-amber-100"
+          >
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Current Password</label>
-              <input
-                type="password"
-                name="currentPassword"
-                value={passwords.currentPassword}
-                onChange={handlePasswordChange}
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-indigo-600"
-              />
+              <h5 className="font-bold text-slate-900 text-sm">{childDisplayName(child)}</h5>
+              <p className="text-xs text-slate-500">
+                {child.className || "Class N/A"}
+                {child.section ? ` – Section ${child.section}` : ""}
+                {child.roll ? ` • Roll #${child.roll}` : ""} • {child.studentId}
+              </p>
             </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">New Password</label>
-              <input
-                type="password"
-                name="newPassword"
-                value={passwords.newPassword}
-                onChange={handlePasswordChange}
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-indigo-600"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Confirm New Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={passwords.confirmPassword}
-                onChange={handlePasswordChange}
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-indigo-600"
-              />
-            </div>
+            <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Linked ✓</span>
           </div>
+        ))
+      )}
 
-          <div className="pt-2">
-            <button
-              type="submit"
-              className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-slate-800 transition-all cursor-pointer"
-            >
-              Update Password 🔒
-            </button>
-          </div>
-        </form>
+      {isModalOpen && parent?.parentId && (
+        <LinkChildModal
+          parentId={parent.parentId}
+          existingChildren={children}
+          onClose={() => setIsModalOpen(false)}
+          onLinked={() => void reload()}
+        />
       )}
     </div>
   );

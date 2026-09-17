@@ -4,18 +4,34 @@ import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useSocket } from "@/hooks/useSocket";
+import LinkChildModal from "@/components/dashboard/LinkChildModal";
+import { childDisplayName, useParentChildren } from "@/hooks/useParentChildren";
 import toast from "react-hot-toast";
 
 export default function ParentMessagesPage() {
   const { user } = useAuthRole();
+  const { parent, children, approvedChildren, loading: childrenLoading, reload } = useParentChildren();
   const { socket } = useSocket();
   const [threads, setThreads] = useState<any[]>([]);
   const [selectedThread, setSelectedThread] = useState<any>(null);
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
 
-  const parentEmail = user?.email || "tariqul.parent@edujira.edu";
+  const parentEmail = user?.email || parent?.email || "";
+  const selectedChild = approvedChildren.find((c) => c.studentId === selectedStudentId) || approvedChildren[0];
+
+  useEffect(() => {
+    if (approvedChildren.length === 0) {
+      setSelectedStudentId("");
+      return;
+    }
+    setSelectedStudentId((prev) =>
+      approvedChildren.some((child) => child.studentId === prev) ? prev : approvedChildren[0].studentId
+    );
+  }, [approvedChildren]);
 
   const fetchThreads = async () => {
     try {
@@ -66,15 +82,19 @@ export default function ParentMessagesPage() {
   }, [socket, selectedThread]);
 
   const handleStartThread = async (teacherName: string, teacherId: string) => {
+    if (!selectedChild) {
+      toast.error("Link a child before messaging a teacher.");
+      return;
+    }
     try {
       const res = await apiPost("/api/messages/threads", {
         parentId: parentEmail,
-        parentName: user?.name || "Tariqul Islam",
+        parentName: user?.name || parent?.name || "Parent",
         teacherId,
         teacherName,
-        studentId: "STD-801",
-        studentName: "Rahim Uddin",
-        className: "Class 8",
+        studentId: selectedChild.studentId,
+        studentName: childDisplayName(selectedChild),
+        className: selectedChild.className || "",
         subjectName: "General Academics",
       });
 
@@ -95,7 +115,7 @@ export default function ParentMessagesPage() {
     try {
       const res = await apiPost(`/api/messages/threads/${selectedThread._id}/send`, {
         senderRole: "parent",
-        senderName: user?.name || "Tariqul Islam",
+        senderName: user?.name || parent?.name || "Parent",
         senderEmail: parentEmail,
         text: messageText,
       });
@@ -112,6 +132,36 @@ export default function ParentMessagesPage() {
     }
   };
 
+  if (childrenLoading) {
+    return <div className="p-12 text-center text-slate-500 text-sm">Loading linked children...</div>;
+  }
+
+  if (approvedChildren.length === 0) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-black text-slate-900">Teacher Communication</h1>
+        <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center space-y-3">
+          <h2 className="text-lg font-bold text-slate-800">No Child Linked</h2>
+          <p className="text-sm text-slate-500">Link a student before messaging their teachers.</p>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl"
+          >
+            Add / Link Child
+          </button>
+        </div>
+        {isModalOpen && parent?.parentId && (
+          <LinkChildModal
+            parentId={parent.parentId}
+            existingChildren={children}
+            onClose={() => setIsModalOpen(false)}
+            onLinked={() => void reload()}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -121,6 +171,19 @@ export default function ParentMessagesPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {approvedChildren.length > 1 && (
+            <select
+              value={selectedStudentId}
+              onChange={(e) => setSelectedStudentId(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700"
+            >
+              {approvedChildren.map((c) => (
+                <option key={c.studentId} value={c.studentId}>
+                  {childDisplayName(c)}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             onClick={() => handleStartThread("Dr. Anisur Rahman", "anisur.rahman@edujira.edu")}
             className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-800 hover:bg-amber-100"

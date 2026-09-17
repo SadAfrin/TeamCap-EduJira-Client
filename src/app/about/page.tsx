@@ -216,7 +216,7 @@ export default function AboutPage() {
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Link
-              href="/login"
+              href="/dashboard"
               className="rounded-xl bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-md focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               Get Started Today

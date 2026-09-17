@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 
 const languageOptions = [
   { code: "en", name: "English", flag: "🇺🇸" },
   { code: "bn", name: "বাংলা (Bangla)", flag: "🇧🇩" },
 ];
 
-// Fallback dictionary for common school notices if network is unavailable
+// Fallback dictionary for common school notices if the translation API is unavailable
 const BENGALI_DICTIONARY: Record<string, string> = {
   "Annual Sports Day 2026": "বার্ষিক ক্রীড়া প্রতিযোগিতা ২০২৬",
   "Mid Term Examination Schedule": "মধ্যবর্তী পরীক্ষার সময়সূচী",
@@ -22,8 +22,13 @@ const BENGALI_DICTIONARY: Record<string, string> = {
 
 export default function ParentNoticesPage() {
   const [notices, setNotices] = useState<any[]>([]);
-  const [selectedLang, setSelectedLang] = useState<"en" | "bn">("bn");
-  const [translatedMap, setTranslatedMap] = useState<Record<string, { title: string; body: string }>>({});
+  const [selectedLang, setSelectedLang] = useState("bn");
+  const [translatedMap, setTranslatedMap] = useState
+    Record<string, { title: string; body: string }>
+  >({});
+  const [showingOriginal, setShowingOriginal] = useState
+    Record<string, boolean>
+  >({});
   const [loading, setLoading] = useState(true);
   const [translating, setTranslating] = useState(false);
 
@@ -35,7 +40,6 @@ export default function ParentNoticesPage() {
         if (res.success && Array.isArray(res.data)) {
           setNotices(res.data);
         } else {
-          // Fallback notice data if server is seeding
           setNotices([
             {
               _id: "not-01",
@@ -72,62 +76,67 @@ export default function ParentNoticesPage() {
     loadNotices();
   }, []);
 
-  // Auto-translate notices when selected language changes
   useEffect(() => {
     async function translateAll() {
       if (notices.length === 0 || selectedLang === "en") {
         setTranslatedMap({});
+        setShowingOriginal({});
         return;
       }
 
       setTranslating(true);
-      const newMap: Record<string, { title: string; body: string }> = {};
+      setShowingOriginal({});
 
-      for (const notice of notices) {
-        // 1. Check if notice already has cached translations from backend
-        if (notice.translations && notice.translations.bn) {
-          newMap[notice._id] = notice.translations.bn;
-          continue;
+      // Fetch all translations concurrently (dev's performance fix)
+      const translationPromises = notices.map(async (notice) => {
+        if (notice.translations && notice.translations[selectedLang]) {
+          return { id: notice._id, data: notice.translations[selectedLang] };
         }
 
-        // 2. Try Next.js internal translate route (/api/translate)
+        // 1. Try the real translation API first
         try {
-          const res = await fetch("/api/translate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: `${notice.title} ||| ${notice.body}`,
-              targetLanguage: "bn",
-            }),
+          const res = await apiPost("/api/ai/translate", {
+            title: notice.title,
+            body: notice.body,
+            targetLang: selectedLang,
           });
-
-          if (res.ok) {
-            const data = await res.json();
-            const translatedCombined = data.translatedText || "";
-            if (translatedCombined && !translatedCombined.includes("[Translation Error]")) {
-              const [tTitle, tBody] = translatedCombined.split(" ||| ");
-              newMap[notice._id] = {
-                title: tTitle?.trim() || notice.title,
-                body: tBody?.trim() || notice.body,
-              };
-              continue;
-            }
+          if (res.success && res.data?.translatedTitle) {
+            return {
+              id: notice._id,
+              data: {
+                title: res.data.translatedTitle,
+                body: res.data.translatedBody,
+              },
+            };
           }
-        } catch {
-          // Fallback to local dictionary translation
+        } catch (err) {
+          console.error("Translation API failed for", notice._id, err);
         }
 
-        // 3. High quality Bengali fallback translation
-        const dictTitle = BENGALI_DICTIONARY[notice.title] || `বিজ্ঞপ্তি: ${notice.title}`;
-        const dictBody = notice.body
-          ? `[বাংলা অনুবাদ]: ${notice.body}`
-          : notice.body;
+        // 2. Fallback to local Bengali dictionary if targeting Bangla and API failed
+        //    (apurba's safety net — prevents #52 from resurfacing if the API is down)
+        if (selectedLang === "bn") {
+          const dictTitle =
+            BENGALI_DICTIONARY[notice.title] || `বিজ্ঞপ্তি: ${notice.title}`;
+          const dictBody = notice.body
+            ? `[বাংলা অনুবাদ]: ${notice.body}`
+            : notice.body;
+          return { id: notice._id, data: { title: dictTitle, body: dictBody } };
+        }
 
-        newMap[notice._id] = {
-          title: dictTitle,
-          body: dictBody,
+        // 3. Last resort — show original
+        return {
+          id: notice._id,
+          data: { title: notice.title, body: notice.body },
         };
-      }
+      });
+
+      const results = await Promise.all(translationPromises);
+
+      const newMap: Record<string, { title: string; body: string }> = {};
+      results.forEach((result) => {
+        newMap[result.id] = result.data;
+      });
 
       setTranslatedMap(newMap);
       setTranslating(false);
@@ -138,66 +147,70 @@ export default function ParentNoticesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Language Selector (English & Bangla Only) */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-slate-900">
-              {selectedLang === "bn" ? "অভিভাবক নোটিশ ও বিজ্ঞপ্তি বোর্ড" : "Guardian Notice Board"}
+              {selectedLang === "bn" ? "অভিভাবক নোটিশ ও বিজ্ঞপ্তি বোর্ড" : "Multilingual Notice Board"}
             </h1>
-            <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
-              {selectedLang === "bn" ? "বাংলা ও ইংরেজি" : "Bangla & English"}
+            <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200">
+              AI Auto-Translate
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
             {selectedLang === "bn"
-              ? "স্কুলের সকল জরুরি ঘোষণা ও বিজ্ঞপ্তি বাংলা ও ইংরেজি ভাষায় তাৎক্ষণিক পড়ুন"
-              : "Read official school announcements in your preferred language"}
+              ? "স্কুলের সকল জরুরি ঘোষণা ও বিজ্ঞপ্তি বাংলা ও ইংরেজি ভাষায় তাৎক্ষণিক পড়ুন"
+              : "Instant real-time translation of school announcements into your preferred language"}
           </p>
         </div>
 
-        {/* Dual Language Switcher Toggle */}
-        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-          {languageOptions.map((lang) => {
-            const active = selectedLang === lang.code;
-            return (
-              <button
-                key={lang.code}
-                type="button"
-                onClick={() => setSelectedLang(lang.code as "en" | "bn")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  active
-                    ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <span>{lang.flag}</span>
-                <span>{lang.name}</span>
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-bold text-slate-600">
+            {selectedLang === "bn" ? "ভাষা নির্বাচন:" : "Translate to:"}
+          </label>
+          <select
+            value={selectedLang}
+            onChange={(e) => setSelectedLang(e.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-800 shadow-xs outline-none focus:border-indigo-600"
+          >
+            {languageOptions.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.flag} {lang.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       {translating && (
-        <div className="flex items-center gap-2 text-xs font-medium text-amber-800 bg-amber-50 p-3 rounded-xl border border-amber-200">
-          <div className="h-2 w-2 rounded-full bg-amber-600 animate-ping" />
-          <span>বিজ্ঞপ্তিগুলো বাংলায় অনুবাদ করা হচ্ছে... (Translating notices into Bangla)...</span>
+        <div className="flex items-center gap-2 text-xs font-medium text-indigo-700 bg-indigo-50/70 p-3 rounded-xl border border-indigo-100">
+          <div className="h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
+          <span>
+            {selectedLang === "bn"
+              ? "বিজ্ঞপ্তিগুলো বাংলায় অনুবাদ করা হচ্ছে..."
+              : `Translating notice announcements into ${languageOptions.find((l) => l.code === selectedLang)?.name}...`}
+          </span>
         </div>
       )}
 
-      {/* Notices Feed */}
       <div className="space-y-4">
         {loading ? (
-          <div className="py-16 text-center text-xs text-slate-400">Loading notices...</div>
+          <div className="py-16 text-center text-xs text-slate-400">
+            Loading notices...
+          </div>
         ) : notices.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-xs text-slate-400">
             {selectedLang === "bn" ? "কোনো সক্রিয় বিজ্ঞপ্তি নেই।" : "No active school announcements."}
           </div>
         ) : (
           notices.map((n) => {
-            const displayTitle = translatedMap[n._id]?.title || n.title;
-            const displayBody = translatedMap[n._id]?.body || n.body;
+            const isOriginal = showingOriginal[n._id];
+            const displayTitle = isOriginal
+              ? n.title
+              : translatedMap[n._id]?.title || n.title;
+            const displayBody = isOriginal
+              ? n.body
+              : translatedMap[n._id]?.body || n.body;
 
             return (
               <div
@@ -215,30 +228,39 @@ export default function ParentNoticesPage() {
                   </div>
 
                   <span className="text-[11px] text-slate-400 font-mono">
-                    {new Date(n.createdAt || Date.now()).toLocaleDateString([], {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {new Date(n.createdAt || Date.now()).toLocaleDateString(
+                      [],
+                      { month: "short", day: "numeric", year: "numeric" },
+                    )}
                   </span>
                 </div>
 
-                <h3 className="text-base font-extrabold text-slate-900 leading-snug">{displayTitle}</h3>
-                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{displayBody}</p>
+                <h3 className="text-base font-extrabold text-slate-900 leading-snug">
+                  {displayTitle}
+                </h3>
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">
+                  {displayBody}
+                </p>
 
-                {selectedLang === "bn" && (
+                {selectedLang !== "en" && (
                   <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 flex items-center justify-between">
-                    <span>🇧🇩 বাংলায় প্রদর্শিত</span>
+                    <span>
+                      {isOriginal
+                        ? (selectedLang === "bn" ? "মূল ইংরেজি লেখা দেখানো হচ্ছে" : "Showing original English text")
+                        : (selectedLang === "bn"
+                            ? "🇧🇩 বাংলায় প্রদর্শিত"
+                            : `Translated from English into ${languageOptions.find((l) => l.code === selectedLang)?.name}`)}
+                    </span>
                     <button
                       onClick={() => {
-                        setTranslatedMap((prev) => ({
+                        setShowingOriginal((prev) => ({
                           ...prev,
-                          [n._id]: { title: n.title, body: n.body },
+                          [n._id]: !prev[n._id],
                         }));
                       }}
                       className="text-amber-700 hover:underline font-bold cursor-pointer"
                     >
-                      Show Original English 🇺🇸
+                      {isOriginal ? "Show Translation" : "Show Original English 🇺🇸"}
                     </button>
                   </div>
                 )}

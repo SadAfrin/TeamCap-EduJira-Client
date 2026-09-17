@@ -12,6 +12,8 @@ export default function DashboardIndexPage() {
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push("/login");
+      } else if (role === "pending") {
+        router.push("/select-role");
       } else {
         router.push(`/dashboard/${role?.toLowerCase() || "student"}`);
       }
