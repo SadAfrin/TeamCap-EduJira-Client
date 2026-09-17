@@ -23,12 +23,12 @@ const BENGALI_DICTIONARY: Record<string, string> = {
 export default function ParentNoticesPage() {
   const [notices, setNotices] = useState<any[]>([]);
   const [selectedLang, setSelectedLang] = useState("bn");
-  const [translatedMap, setTranslatedMap] = useState
-    Record<string, { title: string; body: string }>
-  >({});
-  const [showingOriginal, setShowingOriginal] = useState
-    Record<string, boolean>
-  >({});
+  const [translatedMap, setTranslatedMap] = useState(
+    {} as Record<string, { title: string; body: string }>,
+  );
+  const [showingOriginal, setShowingOriginal] = useState(
+    {} as Record<string, boolean>,
+  );
   const [loading, setLoading] = useState(true);
   const [translating, setTranslating] = useState(false);
 

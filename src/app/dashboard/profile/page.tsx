@@ -19,9 +19,9 @@ export default function ProfilePage() {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState
-    "general" | "academic" | "security"
-  >("general");
+  const [activeTab, setActiveTab] = useState(
+    "general" as "general" | "academic" | "security",
+  );
 
   // Form State - Clean initial values without fake mock overrides
   const [formData, setFormData] = useState({
@@ -133,7 +133,7 @@ export default function ProfilePage() {
   }, [user, userRole]);
 
   const handleChange = (
-    e: React.ChangeEvent
+    e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
