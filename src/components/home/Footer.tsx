@@ -12,15 +12,15 @@ const footerLinks = {
   ],
   Company: [
     { label: "About Us", href: "/about" },
-    { label: "Careers", href: "#" },
-    { label: "Blog", href: "#" },
-    { label: "Contact", href: "#" },
+    { label: "Careers", href: "/careers" },
+    { label: "Blog", href: "/blog" },
+    { label: "Contact", href: "/contact" },
   ],
   Support: [
-    { label: "Help Center", href: "#" },
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
-    { label: "Status", href: "#" },
+    { label: "Help Center", href: "/help" },
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms" },
+    { label: "Status", href: "/status" },
   ],
 };
 
@@ -170,19 +170,19 @@ export default function Footer() {
           </p>
           <div className="flex gap-6">
             <Link
-              href="#"
+              href="/privacy"
               className="text-xs text-slate-500 transition-colors hover:text-slate-300"
             >
               Privacy Policy
             </Link>
             <Link
-              href="#"
+              href="/terms"
               className="text-xs text-slate-500 transition-colors hover:text-slate-300"
             >
               Terms of Service
             </Link>
             <Link
-              href="#"
+              href="/cookies"
               className="text-xs text-slate-500 transition-colors hover:text-slate-300"
             >
               Cookie Policy

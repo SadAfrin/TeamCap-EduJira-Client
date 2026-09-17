@@ -200,7 +200,7 @@ function LoginContent() {
         <p className="mt-8 text-center text-xs text-slate-500">
           Trouble logging in?{" "}
           <Link
-            href="/support"
+            href="/contact"
             className="font-semibold text-indigo-600 hover:underline"
           >
             Contact Support
