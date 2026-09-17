@@ -1,7 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import type { auth } from "./auth";
-import { inferAdditionalFields } from "better-auth/client/plugins";
-import { emailOTPClient } from "better-auth/client/plugins"; // 1. Import the client plugin
+import { inferAdditionalFields, emailOTPClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
   baseURL:
@@ -10,7 +9,7 @@ export const authClient = createAuthClient({
       ? window.location.origin
       : process.env.BETTER_AUTH_URL || "http://localhost:3000"),
   plugins: [
-    inferAdditionalFields<typeof auth>(), 
+    inferAdditionalFields<typeof auth>(),
     emailOTPClient(), // 2. Add it to the plugins array
   ],
 });

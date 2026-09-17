@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/constants";
 import Sidebar from "@/components/dashboard/Sidebar";
+import UserAvatar from "@/components/common/UserAvatar";
 
 export default function DashboardLayout({
   children,
@@ -43,18 +43,14 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-[calc(100vh-65px)] flex-col md:flex-row bg-slate-50">
       {/* Mobile top bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden print:hidden">
         <div className="flex items-center gap-2.5">
-          <div className="relative h-8 w-8 overflow-hidden rounded-full border border-indigo-200 bg-indigo-50">
-            <Image
-              src={user?.image || "/profile.png"}
-              width={32}
-              height={32}
-              alt={user?.name || "User"}
-              className="h-full w-full object-cover"
-              unoptimized
-            />
-          </div>
+          <UserAvatar
+            src={user?.image}
+            name={user?.name}
+            role={role || "student"}
+            size={32}
+          />
           <div>
             <p className="text-xs font-bold text-slate-900 leading-tight">
               {user?.name || "User"}

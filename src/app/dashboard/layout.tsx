@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthRole } from "@/hooks/useAuthRole";
@@ -12,6 +11,7 @@ import NotificationBell from "@/components/dashboard/NotificationBell";
 import { authClient } from "@/lib/auth-client";
 import { apiGet } from "@/lib/api";
 import toast from "react-hot-toast";
+import UserAvatar from "@/components/common/UserAvatar";
 
 export default function DashboardRootLayout({
   children,
@@ -102,7 +102,7 @@ export default function DashboardRootLayout({
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 ">
       {/* Universal Top Navbar */}
-      <header className="sticky  top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md">
+      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md print:hidden">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileOpen(true)}
@@ -204,18 +204,14 @@ export default function DashboardRootLayout({
           <div className="relative">
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-100 transition-colors focus:outline-none"
+              className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
             >
-              <div className="relative h-8 w-8 overflow-hidden rounded-full border border-indigo-200 bg-indigo-50">
-                <Image
-                  src={user?.image || "/profile.png"}
-                  width={32}
-                  height={32}
-                  alt={user?.name || "User"}
-                  className="h-full w-full object-cover"
-                  unoptimized
-                />
-              </div>
+              <UserAvatar
+                src={user?.image}
+                name={user?.name}
+                role={userRole}
+                size={32}
+              />
               <div className="hidden text-left lg:block">
                 <p className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[120px]">
                   {user?.name || "User"}
@@ -289,7 +285,7 @@ export default function DashboardRootLayout({
           isOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
         />
-        <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full print:p-0 print:m-0 print:max-w-none">
           {children}
         </main>
       </div>

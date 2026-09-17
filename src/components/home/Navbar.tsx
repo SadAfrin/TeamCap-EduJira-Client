@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/constants";
 import { Role } from "@/hooks/useAuthRole";
+import UserAvatar from "@/components/common/UserAvatar";
 
 export default function Navbar() {
   const router = useRouter();
@@ -163,16 +163,12 @@ export default function Navbar() {
                 href={dashboardHref}
                 className="group flex items-center gap-2.5 rounded-full border border-slate-200/90 bg-slate-50/80 py-1 pr-3.5 pl-1 transition-all hover:border-slate-300 hover:bg-slate-100/90"
               >
-                <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-indigo-500/30 bg-indigo-100">
-                  <Image
-                    src={user?.image || "/profile.png"}
-                    width={32}
-                    height={32}
-                    alt={user?.name || "User"}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                </div>
+                <UserAvatar
+                  src={user?.image}
+                  name={user?.name}
+                  role={userRole}
+                  size={32}
+                />
                 <div className="flex items-center gap-2 text-left">
                   <span className="max-w-30 truncate text-xs font-semibold text-slate-800">
                     {user?.name || "User"}
@@ -274,16 +270,12 @@ export default function Navbar() {
           {user && (
             <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className="relative h-10 w-10 overflow-hidden rounded-full border border-indigo-200 bg-indigo-50">
-                  <Image
-                    src={user?.image || "/profile.png"}
-                    width={40}
-                    height={40}
-                    alt={user?.name || "User"}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                </div>
+                <UserAvatar
+                  src={user?.image}
+                  name={user?.name}
+                  role={userRole}
+                  size={40}
+                />
                 <div>
                   <p className="font-semibold text-slate-900">{user?.name}</p>
                   <p className="text-xs text-slate-500">{user?.email}</p>
