@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
 import { preCheckEmail } from "../actions";
+import Image from "next/image";
+import { FcGoogle } from "react-icons/fc";
 
 const roles = [
   { id: "teacher", label: "Teacher" },
@@ -324,7 +325,9 @@ export default function RegisterPage() {
 
             {imagePreview ? (
               <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center">
-                <img
+                <Image
+                  width={200}
+                  height={200}
                   src={imagePreview}
                   alt="Selected profile preview"
                   className="h-20 w-20 shrink-0 rounded-xl border border-slate-200 object-cover"
@@ -475,6 +478,25 @@ export default function RegisterPage() {
               : `Register as ${roles.find((r) => r.id === activeRole)?.label}`}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="my-4 flex items-center justify-center gap-3">
+          <div className="h-px flex-1 bg-slate-200/80" />
+          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            Or
+          </span>
+          <div className="h-px flex-1 bg-slate-200/80" />
+        </div>
+
+        {/* SSO Button (Optional UI element for aesthetics) */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white/60 py-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-white hover:border-slate-300"
+        >
+          <FcGoogle size={18} />
+          <span>Continue with Google</span>
+        </button>
 
         <p className="mt-8 text-center text-sm text-slate-500">
           Already have an account?{" "}
