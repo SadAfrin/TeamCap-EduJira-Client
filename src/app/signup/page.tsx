@@ -16,7 +16,13 @@ const roles = [
 type RoleId = (typeof roles)[number]["id"];
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -99,7 +105,9 @@ export default function RegisterPage() {
     const payload = await res.json().catch(() => ({}));
 
     if (!res.ok || !payload?.success || !payload?.data?.url) {
-      throw new Error(payload?.message || "Image upload failed. Please try another photo.");
+      throw new Error(
+        payload?.message || "Image upload failed. Please try another photo.",
+      );
     }
 
     return payload.data.url as string;
@@ -148,7 +156,7 @@ export default function RegisterPage() {
         email: email,
         password: password,
         name: name,
-        image: uploadedImageUrl,
+        image: uploadedImageUrl as string,
         role: activeRole,
         callbackURL: "/login?verified=true",
       });
@@ -288,9 +296,13 @@ export default function RegisterPage() {
                   className="h-20 w-20 shrink-0 rounded-xl border border-slate-200 object-cover"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-800">{imageFile?.name}</p>
+                  <p className="truncate text-sm font-medium text-slate-800">
+                    {imageFile?.name}
+                  </p>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    {imageFile ? `${(imageFile.size / 1024).toFixed(0)} KB` : "Ready to upload"}
+                    {imageFile
+                      ? `${(imageFile.size / 1024).toFixed(0)} KB`
+                      : "Ready to upload"}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
@@ -338,14 +350,19 @@ export default function RegisterPage() {
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-lg text-indigo-600">
                   📷
                 </span>
-                <p className="mt-3 text-sm font-semibold text-slate-800">Tap to upload a photo</p>
+                <p className="mt-3 text-sm font-semibold text-slate-800">
+                  Tap to upload a photo
+                </p>
                 <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-500">
-                  On phones, choose Take Photo or Photo Library. JPG, PNG, or WEBP up to 2MB.
+                  On phones, choose Take Photo or Photo Library. JPG, PNG, or
+                  WEBP up to 2MB.
                 </p>
               </div>
             )}
             {imageError && (
-              <p className="mt-1.5 text-xs font-medium text-rose-600">{imageError}</p>
+              <p className="mt-1.5 text-xs font-medium text-rose-600">
+                {imageError}
+              </p>
             )}
           </div>
 
@@ -396,7 +413,11 @@ export default function RegisterPage() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                {showConfirmPassword ? (
+                  <FiEyeOff size={18} />
+                ) : (
+                  <FiEye size={18} />
+                )}
               </button>
             </div>
           </div>
