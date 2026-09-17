@@ -13,22 +13,25 @@ const BENGALI_DICTIONARY: Record<string, string> = {
   "Annual Sports Day 2026": "বার্ষিক ক্রীড়া প্রতিযোগিতা ২০২৬",
   "Mid Term Examination Schedule": "মধ্যবর্তী পরীক্ষার সময়সূচী",
   "Parent Teacher Meeting (PTM)": "অভিভাবক ও শিক্ষক সমন্বয় সভা",
-  "Eid-ul-Fitr Holiday Announcement": "পবিত্র ঈদুল ফিতর উপলক্ষ্যে ছুটির বিজ্ঞপ্তি",
+  "Eid-ul-Fitr Holiday Announcement":
+    "পবিত্র ঈদুল ফিতর উপলক্ষ্যে ছুটির বিজ্ঞপ্তি",
   "Winter Vacation Notice": "শীতকালীন অবকাশ সংক্রান্ত বিজ্ঞপ্তি",
   "Science Fair Registration Open": "বিজ্ঞান মেলায় অংশগ্রহণের নিবন্ধন শুরু",
-  "Emergency Weather Alert & Online Class": "জরুরি আবহাওয়া সতর্কতা ও অনলাইন ক্লাস",
+  "Emergency Weather Alert & Online Class":
+    "জরুরি আবহাওয়া সতর্কতা ও অনলাইন ক্লাস",
   "Admission Open for New Session": "নতুন সেশনে ভর্তি কার্যক্রম শুরু",
 };
 
 export default function ParentNoticesPage() {
   const [notices, setNotices] = useState<any[]>([]);
   const [selectedLang, setSelectedLang] = useState("bn");
-  const [translatedMap, setTranslatedMap] = useState(
-    {} as Record<string, { title: string; body: string }>,
-  );
-  const [showingOriginal, setShowingOriginal] = useState(
-    {} as Record<string, boolean>,
-  );
+  const [translatedMap, setTranslatedMap] = useState<
+    Record<string, { title: string; body: string }>
+  >({});
+
+  const [showingOriginal, setShowingOriginal] = useState<
+    Record<string, boolean>
+  >({});
   const [loading, setLoading] = useState(true);
   const [translating, setTranslating] = useState(false);
 
@@ -151,7 +154,9 @@ export default function ParentNoticesPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-slate-900">
-              {selectedLang === "bn" ? "অভিভাবক নোটিশ ও বিজ্ঞপ্তি বোর্ড" : "Multilingual Notice Board"}
+              {selectedLang === "bn"
+                ? "অভিভাবক নোটিশ ও বিজ্ঞপ্তি বোর্ড"
+                : "Multilingual Notice Board"}
             </h1>
             <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200">
               AI Auto-Translate
@@ -200,7 +205,9 @@ export default function ParentNoticesPage() {
           </div>
         ) : notices.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-xs text-slate-400">
-            {selectedLang === "bn" ? "কোনো সক্রিয় বিজ্ঞপ্তি নেই।" : "No active school announcements."}
+            {selectedLang === "bn"
+              ? "কোনো সক্রিয় বিজ্ঞপ্তি নেই।"
+              : "No active school announcements."}
           </div>
         ) : (
           notices.map((n) => {
@@ -223,7 +230,8 @@ export default function ParentNoticesPage() {
                       {n.category || "Announcement"}
                     </span>
                     <span className="text-xs text-slate-400 font-medium">
-                      {selectedLang === "bn" ? "প্রকাশক:" : "Published by:"} {n.createdBy || "School Office"}
+                      {selectedLang === "bn" ? "প্রকাশক:" : "Published by:"}{" "}
+                      {n.createdBy || "School Office"}
                     </span>
                   </div>
 
@@ -246,10 +254,12 @@ export default function ParentNoticesPage() {
                   <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 flex items-center justify-between">
                     <span>
                       {isOriginal
-                        ? (selectedLang === "bn" ? "মূল ইংরেজি লেখা দেখানো হচ্ছে" : "Showing original English text")
-                        : (selectedLang === "bn"
-                            ? "🇧🇩 বাংলায় প্রদর্শিত"
-                            : `Translated from English into ${languageOptions.find((l) => l.code === selectedLang)?.name}`)}
+                        ? selectedLang === "bn"
+                          ? "মূল ইংরেজি লেখা দেখানো হচ্ছে"
+                          : "Showing original English text"
+                        : selectedLang === "bn"
+                          ? "🇧🇩 বাংলায় প্রদর্শিত"
+                          : `Translated from English into ${languageOptions.find((l) => l.code === selectedLang)?.name}`}
                     </span>
                     <button
                       onClick={() => {
@@ -260,7 +270,9 @@ export default function ParentNoticesPage() {
                       }}
                       className="text-amber-700 hover:underline font-bold cursor-pointer"
                     >
-                      {isOriginal ? "Show Translation" : "Show Original English 🇺🇸"}
+                      {isOriginal
+                        ? "Show Translation"
+                        : "Show Original English 🇺🇸"}
                     </button>
                   </div>
                 )}
