@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/constants";
 import { Role } from "@/hooks/useAuthRole";
 import UserAvatar from "@/components/common/UserAvatar";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 export default function Navbar() {
   const router = useRouter();
@@ -39,27 +40,30 @@ export default function Navbar() {
 
   if (isPending) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
           <Link
             href="/"
-            className="text-2xl font-bold tracking-tighter text-slate-900"
+            className="text-2xl font-bold tracking-tighter text-slate-900 dark:text-slate-100"
           >
             Edu<span className="text-indigo-600">Jira</span>
           </Link>
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+          </div>
         </div>
       </header>
     );
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/90 shadow-xs backdrop-blur-md transition-all">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/90 shadow-xs backdrop-blur-md transition-all dark:border-slate-800 dark:bg-slate-950/90">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5 lg:px-8">
         {/* Logo Section */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-2xl font-bold tracking-tighter text-slate-900 transition-opacity hover:opacity-85"
+          className="flex items-center gap-2 text-2xl font-bold tracking-tighter text-slate-900 transition-opacity hover:opacity-85 dark:text-slate-100"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-tr from-indigo-600 to-indigo-500 text-white shadow-sm shadow-indigo-500/30">
@@ -155,7 +159,8 @@ export default function Navbar() {
         </nav>
 
         {/* Desktop Action Buttons / Profile Section */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           {user ? (
             <div className="flex items-center gap-3">
               {/* Profile Card & Role Badge */}
@@ -226,7 +231,7 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 md:hidden"
+            className="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white md:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-expanded={isMobileMenuOpen}
           >
@@ -266,7 +271,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="border-t border-slate-200 bg-white px-6 py-6 shadow-xl md:hidden">
+        <div className="border-t border-slate-200 bg-white px-6 py-6 shadow-xl dark:border-slate-800 dark:bg-slate-950 md:hidden">
           {user && (
             <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">

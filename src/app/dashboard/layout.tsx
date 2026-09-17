@@ -12,6 +12,7 @@ import { authClient } from "@/lib/auth-client";
 import { apiGet } from "@/lib/api";
 import toast from "react-hot-toast";
 import UserAvatar from "@/components/common/UserAvatar";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 export default function DashboardRootLayout({
   children,
@@ -100,13 +101,13 @@ export default function DashboardRootLayout({
   if (!isLoading && !isAuthenticated) return null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 ">
+    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
       {/* Universal Top Navbar */}
-      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md print:hidden">
+      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md print:hidden dark:border-slate-800 dark:bg-slate-950/95">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 md:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 md:hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             aria-label="Toggle menu"
           >
             <svg
@@ -128,7 +129,7 @@ export default function DashboardRootLayout({
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-base shadow-sm">
               E
             </div>
-            <span className="text-lg font-black tracking-tight text-slate-900">
+            <span className="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
               Edu<span className="text-indigo-600">Jira</span>
             </span>
           </Link>
@@ -196,15 +197,16 @@ export default function DashboardRootLayout({
             </Link>
           </div>
         </div>
-        {/* Right Action Icons: Notification Bell & User Profile */}
-        <div className="flex items-center gap-3">
+        {/* Right Action Icons: Theme, Notification Bell & User Profile */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <NotificationBell />
 
           {/* Profile Dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
+              className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer dark:hover:bg-slate-800"
             >
               <UserAvatar
                 src={user?.image}
@@ -213,7 +215,7 @@ export default function DashboardRootLayout({
                 size={32}
               />
               <div className="hidden text-left lg:block">
-                <p className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[120px]">
+                <p className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[120px] dark:text-slate-100">
                   {user?.name || "User"}
                 </p>
                 <p className="text-[10px] font-medium text-slate-500 capitalize">
@@ -236,7 +238,7 @@ export default function DashboardRootLayout({
             </button>
 
             {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150 dark:border-slate-700 dark:bg-slate-900">
                 <div className="border-b border-slate-100 p-2 text-xs">
                   <p className="font-bold text-slate-900 truncate">
                     {user?.name || "User"}
