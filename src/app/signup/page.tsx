@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FcGoogle } from "react-icons/fc";
+import { preCheckEmail } from "../actions";
 
 const roles = [
   { id: "teacher", label: "Teacher" },
@@ -42,6 +44,11 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    await authClient.signIn.social({ provider: "google" });
+  };
 
   useEffect(() => {
     return () => {
@@ -116,6 +123,7 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    // 1. Run local validation FIRST (Instant, no database needed)
     if (!name || !email || !password || !confirmPassword) {
       const msg = "Please fill in all fields to continue.";
       setError(msg);
@@ -145,13 +153,27 @@ export default function RegisterPage() {
       return;
     }
 
+    // 2. Clear previous errors and start the loading spinner
     setError("");
     setImageError("");
     setLoading(true);
 
     try {
+      // 3. NOW check the database (Inside the try/catch block!)
+      const emailAlreadyRegistered = await preCheckEmail(email);
+
+      if (emailAlreadyRegistered) {
+        const msg = "This email is already registered. Please log in instead.";
+        setError(msg);
+        toast.error(msg);
+        // Note: We don't need setLoading(false) here because the `finally` block handles it!
+        return; // Stops Better Auth from ever running!
+      }
+
+      // 4. Upload the profile image before creating the account
       const uploadedImageUrl = await uploadProfileImage(imageFile);
 
+      // 5. Send data to Better Auth
       const { data, error } = await authClient.signUp.email({
         email: email,
         password: password,
@@ -160,19 +182,30 @@ export default function RegisterPage() {
         role: activeRole,
         callbackURL: "/login?verified=true",
       });
+
       console.log("Signup response:", { data, error });
+
+      // 6. Handle backend errors
       if (error) {
+        if (error.code === "USER_ALREADY_EXISTS" || error.status === 400) {
+          const msg =
+            "This email is already registered. Please log in instead.";
+          setError(msg);
+          toast.error(msg);
+          return;
+        }
+
         const errorMsg = error.message || "Error signing up";
         setError(errorMsg);
         toast.error(errorMsg);
         return;
       }
 
+      // 7. Handle success and redirect
       if (data) {
         toast.success(
           "Account created! Please check your email to verify your account.",
         );
-
         router.push("/login");
       }
     } catch (err: unknown) {
@@ -182,6 +215,7 @@ export default function RegisterPage() {
       setError(fallbackError);
       toast.error(fallbackError);
     } finally {
+      // 8. This guarantees the loading spinner stops no matter what happens
       setLoading(false);
     }
   }
