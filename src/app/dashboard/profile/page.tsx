@@ -19,10 +19,9 @@ export default function ProfilePage() {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState
+  const [activeTab, setActiveTab] = useState<
     "general" | "academic" | "security"
   >("general");
-
   // Form State - Clean initial values without fake mock overrides
   const [formData, setFormData] = useState({
     id: "",
@@ -89,10 +88,14 @@ export default function ProfilePage() {
       try {
         if (user.email) {
           let endpoint = "";
-          if (userRole === "parent") endpoint = `/api/parents?search=${encodeURIComponent(user.email)}`;
-          else if (userRole === "student") endpoint = `/api/students?search=${encodeURIComponent(user.email)}`;
-          else if (userRole === "teacher") endpoint = `/api/teachers?search=${encodeURIComponent(user.email)}`;
-          else if (userRole === "admin") endpoint = `/api/admins?search=${encodeURIComponent(user.email)}`;
+          if (userRole === "parent")
+            endpoint = `/api/parents?search=${encodeURIComponent(user.email)}`;
+          else if (userRole === "student")
+            endpoint = `/api/students?search=${encodeURIComponent(user.email)}`;
+          else if (userRole === "teacher")
+            endpoint = `/api/teachers?search=${encodeURIComponent(user.email)}`;
+          else if (userRole === "admin")
+            endpoint = `/api/admins?search=${encodeURIComponent(user.email)}`;
 
           if (endpoint) {
             const res = await apiGet(endpoint);
@@ -133,7 +136,7 @@ export default function ProfilePage() {
   }, [user, userRole]);
 
   const handleChange = (
-    e: React.ChangeEvent
+    e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
@@ -173,7 +176,10 @@ export default function ProfilePage() {
 
       // 2. Save local copy in localStorage for persistence across reloads
       try {
-        localStorage.setItem(`edujira_profile_${user?.email || "user"}`, JSON.stringify(formData));
+        localStorage.setItem(
+          `edujira_profile_${user?.email || "user"}`,
+          JSON.stringify(formData),
+        );
       } catch {}
 
       toast.success("Profile details updated successfully! 🎉");
@@ -244,7 +250,9 @@ export default function ProfilePage() {
 
           <div className="flex items-center gap-3">
             <span className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white border border-white/10">
-              {userRole === "student" ? `ID: ${formData.studentId || "Student"}` : `Role: ${roleMeta.title}`}
+              {userRole === "student"
+                ? `ID: ${formData.studentId || "Student"}`
+                : `Role: ${roleMeta.title}`}
             </span>
           </div>
         </div>
@@ -290,8 +298,13 @@ export default function ProfilePage() {
           className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6"
         >
           <div>
-            <h3 className="text-base font-bold text-slate-900">Personal & Contact Details</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Edit your display name, contact phone number, residential address, and profile photo.</p>
+            <h3 className="text-base font-bold text-slate-900">
+              Personal & Contact Details
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Edit your display name, contact phone number, residential address,
+              and profile photo.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -488,10 +501,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="rounded-2xl bg-indigo-50/70 p-5 border border-indigo-100 space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">Guardian / Emergency Contact Details</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">
+                  Guardian / Emergency Contact Details
+                </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Guardian Name</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Guardian Name
+                    </label>
                     <input
                       type="text"
                       name="parentName"
@@ -502,7 +519,9 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Guardian Email</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Guardian Email
+                    </label>
                     <input
                       type="email"
                       name="parentEmail"
@@ -513,7 +532,9 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Guardian Phone</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Guardian Phone
+                    </label>
                     <input
                       type="tel"
                       name="parentPhone"
@@ -542,7 +563,9 @@ export default function ProfilePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Faculty Designation</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Faculty Designation
+                  </label>
                   <input
                     type="text"
                     name="designation"
@@ -553,7 +576,9 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Assigned Subjects</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Assigned Subjects
+                  </label>
                   <input
                     type="text"
                     name="subject"
@@ -566,7 +591,9 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Highest Qualification</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Highest Qualification
+                </label>
                 <input
                   type="text"
                   name="qualification"
@@ -606,7 +633,9 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Institution Name</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Institution Name
+                </label>
                 <input
                   type="text"
                   name="institutionName"
@@ -635,7 +664,8 @@ export default function ProfilePage() {
 }
 
 function ParentLinkedChildrenCard() {
-  const { parent, children, approvedChildren, loading, reload } = useParentChildren();
+  const { parent, children, approvedChildren, loading, reload } =
+    useParentChildren();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (loading) {
@@ -645,7 +675,9 @@ function ParentLinkedChildrenCard() {
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-wider text-amber-900">Linked Student Children</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-amber-900">
+          Linked Student Children
+        </p>
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
@@ -657,7 +689,8 @@ function ParentLinkedChildrenCard() {
 
       {approvedChildren.length === 0 ? (
         <p className="text-xs text-slate-500 bg-white p-3 rounded-xl border border-amber-100">
-          No child linked yet. Verify a student from the school database to continue.
+          No child linked yet. Verify a student from the school database to
+          continue.
         </p>
       ) : (
         approvedChildren.map((child) => (
@@ -666,14 +699,18 @@ function ParentLinkedChildrenCard() {
             className="flex items-center justify-between bg-white p-3 rounded-xl border border-amber-100"
           >
             <div>
-              <h5 className="font-bold text-slate-900 text-sm">{childDisplayName(child)}</h5>
+              <h5 className="font-bold text-slate-900 text-sm">
+                {childDisplayName(child)}
+              </h5>
               <p className="text-xs text-slate-500">
                 {child.className || "Class N/A"}
                 {child.section ? ` – Section ${child.section}` : ""}
                 {child.roll ? ` • Roll #${child.roll}` : ""} • {child.studentId}
               </p>
             </div>
-            <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Linked ✓</span>
+            <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+              Linked ✓
+            </span>
           </div>
         ))
       )}
