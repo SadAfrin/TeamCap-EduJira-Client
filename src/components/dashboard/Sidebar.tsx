@@ -140,20 +140,20 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
     <div className="flex h-full flex-col justify-between">
       <div>
         {/* Workspace Header */}
-        <div className="border-b border-slate-200/80 px-6 py-5">
+        <div className="border-b border-slate-200/80 px-6 py-5 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${roleMeta.color.bg} text-white shadow-sm shadow-indigo-500/20`}>
               <span className="font-bold text-base uppercase">{currentRole.charAt(0)}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-bold text-slate-900 tracking-tight truncate">{roleMeta.title}</h2>
+              <h2 className="text-sm font-bold text-slate-900 tracking-tight truncate dark:text-slate-100">{roleMeta.title}</h2>
               <p className="text-[11px] text-slate-500 truncate">{roleMeta.subtitle}</p>
             </div>
           </div>
         </div>
 
         {/* User Card */}
-        <div className="mx-3 my-3.5 rounded-xl border border-slate-200/90 bg-slate-50/80 p-3">
+        <div className="mx-3 my-3.5 rounded-xl border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/80">
           <div className="flex items-center gap-3">
             <UserAvatar
               src={user?.image}
@@ -162,7 +162,7 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
               size={36}
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold text-slate-900">{user?.name || "User"}</p>
+              <p className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">{user?.name || "User"}</p>
               <div className="mt-0.5 flex items-center gap-1.5">
                 <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${roleMeta.color.lightBg} ${roleMeta.color.text} border ${roleMeta.color.border}`}>
                   {currentRole}
@@ -186,7 +186,7 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
                   className={`group flex items-center justify-between rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold transition-all ${
                     active
                       ? `${roleMeta.color.lightBg} ${roleMeta.color.text} shadow-xs border ${roleMeta.color.border}`
-                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -208,7 +208,7 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
       </div>
 
       {/* Footer / Sign Out */}
-      <div className="border-t border-slate-200/80 p-3">
+      <div className="border-t border-slate-200/80 p-3 dark:border-slate-800">
         <button
           onClick={handleSignOut}
           className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
@@ -225,7 +225,7 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
   return (
     <>
       {/* Desktop static sidebar */}
-      <aside className="hidden w-68 shrink-0 flex-col border-r border-slate-200/80 bg-white md:flex print:hidden">
+      <aside className="hidden w-68 shrink-0 flex-col border-r border-slate-200/80 bg-white md:flex print:hidden dark:border-slate-800 dark:bg-slate-950">
         {sidebarContent}
       </aside>
 
@@ -240,17 +240,17 @@ export default function Sidebar({ role: propRole, isOpen, onClose }: SidebarProp
 
       {/* Mobile Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-76 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out md:hidden print:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-76 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out md:hidden print:hidden dark:border-slate-800 dark:bg-slate-950 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <div className="flex items-center gap-2 font-bold text-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+          <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
             <span className="text-indigo-600">EduJira</span> {roleMeta.title}
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
             aria-label="Close menu"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.75" stroke="currentColor">
