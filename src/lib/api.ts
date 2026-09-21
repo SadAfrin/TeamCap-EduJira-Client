@@ -8,12 +8,16 @@ function buildUrl(path: string) {
     : `${BASE_URL.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
 }
 
-export async function apiGet(path: string) {
+export async function apiGet(path: string, customHeaders: Record<string, string> = {}) {
   try {
     const url = buildUrl(path);
     const res = await fetch(url, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...customHeaders,
+      },
+      credentials: "include",
       cache: "no-store",
     });
     
@@ -29,12 +33,16 @@ export async function apiGet(path: string) {
   }
 }
 
-export async function apiPost(path: string, body: unknown) {
+export async function apiPost(path: string, body: unknown, customHeaders: Record<string, string> = {}) {
   try {
     const url = buildUrl(path);
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...customHeaders,
+      },
+      credentials: "include",
       body: JSON.stringify(body),
     });
     
@@ -50,12 +58,16 @@ export async function apiPost(path: string, body: unknown) {
   }
 }
 
-export async function apiPut(path: string, body: unknown) {
+export async function apiPut(path: string, body: unknown, customHeaders: Record<string, string> = {}) {
   try {
     const url = buildUrl(path);
     const res = await fetch(url, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...customHeaders,
+      },
+      credentials: "include",
       body: JSON.stringify(body),
     });
     
@@ -71,12 +83,16 @@ export async function apiPut(path: string, body: unknown) {
   }
 }
 
-export async function apiPatch(path: string, body: unknown) {
+export async function apiPatch(path: string, body: unknown, customHeaders: Record<string, string> = {}) {
   try {
     const url = path.startsWith("http") ? path : `${BASE_URL}${path}`;
     const res = await fetch(url, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...customHeaders,
+      },
+      credentials: "include",
       body: JSON.stringify(body),
     });
 
@@ -92,12 +108,16 @@ export async function apiPatch(path: string, body: unknown) {
   }
 }
 
-export async function apiDelete(path: string) {
+export async function apiDelete(path: string, customHeaders: Record<string, string> = {}) {
   try {
     const url = buildUrl(path);
     const res = await fetch(url, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...customHeaders,
+      },
+      credentials: "include",
     });
     
     if (!res.ok) {
