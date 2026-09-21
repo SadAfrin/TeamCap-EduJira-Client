@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import StudentManagement from "@/app/(dashboard)/admin/students/page";
 import TeacherManagement from "@/app/(dashboard)/admin/teachers/page";
-import AdminManagement from "@/app/(dashboard)/admin/admins/page";
 import ParentManagement from "@/app/(dashboard)/admin/parents/page";
 import { apiGet, apiPost } from "@/lib/api";
 import toast from "react-hot-toast";
@@ -325,7 +324,7 @@ function PendingRegistrationsQueue() {
 }
 
 export default function UserManagementMasterPage() {
-  const [activeTab, setActiveTab] = useState<"pending" | "students" | "teachers" | "admins" | "parents">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "students" | "teachers" | "parents">("pending");
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -333,7 +332,7 @@ export default function UserManagementMasterPage() {
       <div className="border-b border-slate-200/80 pb-5">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Institutional User Directory & Admissions</h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-          Review pending self-registrations, manage CRUD access for Students, Faculty, Administrators, and Guardians.
+          Review pending self-registrations, manage CRUD access for Students, Faculty, and Guardians.
         </p>
       </div>
 
@@ -373,17 +372,6 @@ export default function UserManagementMasterPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab("admins")}
-          className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all ${
-            activeTab === "admins"
-              ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-          }`}
-        >
-          <span>👑 Administrators</span>
-        </button>
-
-        <button
           onClick={() => setActiveTab("parents")}
           className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all ${
             activeTab === "parents"
@@ -400,7 +388,6 @@ export default function UserManagementMasterPage() {
         {activeTab === "pending" && <PendingRegistrationsQueue />}
         {activeTab === "students" && <StudentManagement />}
         {activeTab === "teachers" && <TeacherManagement />}
-        {activeTab === "admins" && <AdminManagement />}
         {activeTab === "parents" && <ParentManagement />}
       </div>
     </div>

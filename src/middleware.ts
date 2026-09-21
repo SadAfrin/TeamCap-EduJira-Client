@@ -8,7 +8,6 @@ const protectedRoutes = [
   "/student",
   "/parent",
   "/dashboard",
-  "/attendance",
   "/timetable",
   "/calendar",
   "/select-role",
