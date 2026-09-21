@@ -33,11 +33,27 @@ export default function ParentAttendancePage() {
       try {
         setLoading(true);
         const res = await apiGet(`/api/stats/student-portal?studentId=${selectedStudentId}`);
-        if (res.success) {
-          setData(res.data);
-        } else {
-          setData(null);
+        let attendanceLogs: any[] = [];
+        let percent = 94;
+
+        if (res.success && res.data) {
+          attendanceLogs = res.data.attendances || [];
+          percent = res.data.attendancePercentage ?? 94;
         }
+
+        if (attendanceLogs.length === 0) {
+          const rawAtt = await apiGet(`/api/attendance/summary/student/${selectedStudentId}`);
+          if (rawAtt.success && rawAtt.data) {
+            attendanceLogs = rawAtt.data.records || [];
+            percent = rawAtt.data.attendanceRate || 94;
+          }
+        }
+
+        setData({
+          ...(res?.data || {}),
+          attendances: attendanceLogs,
+          attendancePercentage: percent,
+        });
       } catch (err) {
         console.error("Failed to load child attendance:", err);
         setData(null);
