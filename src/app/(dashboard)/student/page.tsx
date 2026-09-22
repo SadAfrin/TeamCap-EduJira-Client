@@ -29,14 +29,22 @@ export default function StudentDashboard() {
           apiGet(`/api/stats/student-portal?email=${encodeURIComponent(user?.email || "")}&name=${encodeURIComponent(user?.name || "")}`),
           apiGet(`/api/notices?role=student&limit=3`),
           apiGet(`/api/assignments?className=Class 8&studentId=${encodeURIComponent(user?.id || "STD-801")}`),
-          apiGet(`/api/routines?className=Class 8&section=B&day=Sunday`),
+          apiGet(`/api/timetable?className=Class 8&section=B&day=Sunday`),
         ]);
 
         if (statsRes.success) setStudentData(statsRes.data);
         if (noticesRes.success) setNotices(noticesRes.data?.slice(0, 3) || []);
         if (assignRes.success) setAssignments(assignRes.data?.slice(0, 3) || []);
-        if (routineRes.success && routineRes.data?.[0]?.periodSlots) {
-          setRoutine(routineRes.data[0].periodSlots);
+        if (routineRes.success && Array.isArray(routineRes.data)) {
+          setRoutine(
+            routineRes.data.map((slot: any) => ({
+              period: slot.periodId || slot.period || slot.startTime || "Period",
+              time: slot.time || `${slot.startTime || ""} – ${slot.endTime || ""}`.trim(),
+              subject: slot.subject || slot.courseName || "Class",
+              teacher: slot.teacher || slot.teacherName || "TBA",
+              room: slot.room || "—",
+            })),
+          );
         }
       } catch (err) {
         console.error("Failed to load student portal data:", err);

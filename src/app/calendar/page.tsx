@@ -487,34 +487,35 @@ function CalendarPortal() {
         const res = await apiPatch(`/api/events/${eventId}`, eventPayload);
         if (res && res.success) {
           setNotification({ type: "success", message: "Event updated in database successfully." });
+          await fetchCalendarData();
+          setIsEventModalOpen(false);
+          setEditingEvent(null);
+        } else {
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to update event in the database.",
+          });
         }
       } else {
         const res = await apiPost("/api/events", eventPayload);
         if (res && res.success) {
           setNotification({ type: "success", message: "New event created in database successfully." });
+          await fetchCalendarData();
+          setIsEventModalOpen(false);
+          setEditingEvent(null);
+        } else {
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to save event to the database.",
+          });
         }
       }
-      await fetchCalendarData();
     } catch (err: any) {
       console.error("Save event error:", err);
-      if (editingEvent) {
-        setEvents((prev) =>
-          prev.map((evt) =>
-            (evt._id || evt.id) === (editingEvent._id || editingEvent.id)
-              ? { ...evt, ...eventPayload }
-              : evt
-          )
-        );
-      } else {
-        setEvents((prev) => [
-          ...prev,
-          { id: `evt-${Date.now()}`, ...eventPayload },
-        ]);
-      }
-      setNotification({ type: "success", message: "Event saved." });
-    } finally {
-      setIsEventModalOpen(false);
-      setEditingEvent(null);
+      setNotification({
+        type: "error",
+        message: err?.message || "Failed to save event to the database.",
+      });
     }
   };
 
@@ -525,15 +526,19 @@ function CalendarPortal() {
         const res = await apiDelete(`/api/events/${id}`);
         if (res && res.success) {
           setNotification({ type: "success", message: "Event deleted from database." });
+          await fetchCalendarData();
+          setIsEventDetailOpen(false);
         } else {
-          setEvents((prev) => prev.filter((evt) => (evt._id || evt.id) !== id));
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to delete event from the database.",
+          });
         }
-        await fetchCalendarData();
       } catch (err: any) {
-        setEvents((prev) => prev.filter((evt) => (evt._id || evt.id) !== id));
-        setNotification({ type: "success", message: "Event deleted." });
-      } finally {
-        setIsEventDetailOpen(false);
+        setNotification({
+          type: "error",
+          message: err?.message || "Failed to delete event from the database.",
+        });
       }
     }
   };
@@ -576,6 +581,14 @@ function CalendarPortal() {
         const res = await apiPatch(`/api/calendars/${calId}`, calPayload);
         if (res && res.success) {
           setNotification({ type: "success", message: "Calendar category updated in database." });
+          await fetchCalendarData();
+          setIsCalendarModalOpen(false);
+          setEditingCalendar(null);
+        } else {
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to update calendar category in the database.",
+          });
         }
       } else {
         const res = await apiPost("/api/calendars", calPayload);
@@ -583,28 +596,22 @@ function CalendarPortal() {
           setNotification({ type: "success", message: "New calendar category created in database." });
           const newId = res.data?.customId || res.data?._id || res.data?.id;
           if (newId) setSelectedCalendars((prev) => [...prev, newId]);
+          await fetchCalendarData();
+          setIsCalendarModalOpen(false);
+          setEditingCalendar(null);
+        } else {
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to save calendar category to the database.",
+          });
         }
       }
-      await fetchCalendarData();
     } catch (err: any) {
       console.error("Save calendar error:", err);
-      if (editingCalendar) {
-        setCalendars((prev) =>
-          prev.map((c) =>
-            (c._id || c.id) === (editingCalendar._id || editingCalendar.id)
-              ? { ...c, ...calPayload }
-              : c
-          )
-        );
-      } else {
-        const newId = `cal-${Date.now()}`;
-        setCalendars((prev) => [...prev, { id: newId, ...calPayload }]);
-        setSelectedCalendars((prev) => [...prev, newId]);
-      }
-      setNotification({ type: "success", message: "Calendar category updated." });
-    } finally {
-      setIsCalendarModalOpen(false);
-      setEditingCalendar(null);
+      setNotification({
+        type: "error",
+        message: err?.message || "Failed to save calendar category to the database.",
+      });
     }
   };
 
@@ -619,15 +626,18 @@ function CalendarPortal() {
         const res = await apiDelete(`/api/calendars/${id}`);
         if (res && res.success) {
           setNotification({ type: "success", message: "Calendar category and associated events deleted." });
+          await fetchCalendarData();
         } else {
-          setCalendars((prev) => prev.filter((c) => (c._id || c.id) !== id));
-          setEvents((prev) => prev.filter((evt) => evt.calendarId !== id));
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to delete calendar category from the database.",
+          });
         }
-        await fetchCalendarData();
       } catch (err: any) {
-        setCalendars((prev) => prev.filter((c) => (c._id || c.id) !== id));
-        setEvents((prev) => prev.filter((evt) => evt.calendarId !== id));
-        setNotification({ type: "success", message: "Calendar category deleted." });
+        setNotification({
+          type: "error",
+          message: err?.message || "Failed to delete calendar category from the database.",
+        });
       }
     }
   };

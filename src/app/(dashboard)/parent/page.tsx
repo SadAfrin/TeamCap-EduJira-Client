@@ -65,7 +65,7 @@ export default function ParentDashboard() {
         const [attendanceRes, resultsRes, routineRes] = await Promise.all([
           apiGet(`/api/stats/student-portal?studentId=${activeChild.studentId}`),
           apiGet(`/api/results/transcript?studentId=${activeChild.studentId}&term=All`),
-          apiGet(`/api/routines?className=${activeChild.className}&section=${activeChild.section}&day=${dayOfWeek}`)
+          apiGet(`/api/timetable?className=${encodeURIComponent(activeChild.className)}&section=${encodeURIComponent(activeChild.section)}&day=${encodeURIComponent(dayOfWeek)}`)
         ]);
 
         setChildStats({
@@ -73,10 +73,18 @@ export default function ParentDashboard() {
           results: resultsRes.success ? resultsRes.data : null,
         });
 
-        if (routineRes.success && routineRes.data.length > 0) {
-           setChildRoutine(routineRes.data[0].periodSlots || []);
+        if (routineRes.success && Array.isArray(routineRes.data)) {
+          setChildRoutine(
+            routineRes.data.map((slot: any) => ({
+              period: slot.periodId || slot.period || slot.startTime || "Period",
+              time: slot.time || `${slot.startTime || ""} – ${slot.endTime || ""}`.trim(),
+              subject: slot.subject || slot.courseName || "Class",
+              teacher: slot.teacher || slot.teacherName || "TBA",
+              room: slot.room || "—",
+            })),
+          );
         } else {
-           setChildRoutine([]);
+          setChildRoutine([]);
         }
       } catch (err) {
         console.error("Failed to load active child data:", err);

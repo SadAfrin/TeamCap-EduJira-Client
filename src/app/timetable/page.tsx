@@ -519,14 +519,18 @@ function TimetablePortal() {
         const res = await apiDelete(`/api/timetable/${slotId}`);
         if (res && res.success) {
           setNotification({ type: "success", message: "Routine slot removed successfully." });
+          await fetchSlots();
         } else {
-          setSlots((prev) => prev.filter((s) => (s._id || s.id) !== slotId));
-          setNotification({ type: "success", message: "Routine slot removed." });
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to delete slot from the database.",
+          });
         }
-        await fetchSlots();
       } catch (err: any) {
-        setSlots((prev) => prev.filter((s) => (s._id || s.id) !== slotId));
-        setNotification({ type: "success", message: "Routine slot removed." });
+        setNotification({
+          type: "error",
+          message: err?.message || "Failed to delete slot from the database.",
+        });
       } finally {
         setIsModalOpen(false);
         setEditingSlot(null);
@@ -564,28 +568,35 @@ function TimetablePortal() {
         const res = await apiPatch(`/api/timetable/${slotId}`, slotPayload);
         if (res && res.success) {
           setNotification({ type: "success", message: "Timetable slot updated successfully in database." });
+          await fetchSlots();
+          setIsModalOpen(false);
+          setEditingSlot(null);
+        } else {
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to update timetable slot in the database.",
+          });
         }
       } else {
         const res = await apiPost("/api/timetable", slotPayload);
         if (res && res.success) {
           setNotification({ type: "success", message: "New timetable slot saved to database." });
+          await fetchSlots();
+          setIsModalOpen(false);
+          setEditingSlot(null);
+        } else {
+          setNotification({
+            type: "error",
+            message: res?.message || "Failed to save timetable slot to the database.",
+          });
         }
       }
-      await fetchSlots();
     } catch (err: any) {
       console.error("Save slot error:", err);
-      // Fallback local update
-      if (editingSlot) {
-        setSlots((prev) =>
-          prev.map((s) => ((s._id || s.id) === (editingSlot._id || editingSlot.id) ? { ...s, ...slotPayload } : s))
-        );
-      } else {
-        setSlots((prev) => [...prev, { id: `slot-${Date.now()}`, ...slotPayload }]);
-      }
-      setNotification({ type: "success", message: "Slot updated." });
-    } finally {
-      setIsModalOpen(false);
-      setEditingSlot(null);
+      setNotification({
+        type: "error",
+        message: err?.message || "Failed to save timetable slot to the database.",
+      });
     }
   };
 

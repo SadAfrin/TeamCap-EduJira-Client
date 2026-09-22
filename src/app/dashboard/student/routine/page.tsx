@@ -14,9 +14,19 @@ export default function StudentRoutinePage() {
     async function loadRoutine() {
       try {
         setLoading(true);
-        const res = await apiGet(`/api/routines?className=Class 8&section=B&day=${selectedDay}`);
-        if (res.success && res.data?.[0]?.periodSlots) {
-          setRoutineData(res.data[0].periodSlots);
+        const res = await apiGet(
+          `/api/timetable?className=${encodeURIComponent("Class 8")}&section=${encodeURIComponent("B")}&day=${encodeURIComponent(selectedDay)}`,
+        );
+        if (res.success && Array.isArray(res.data)) {
+          setRoutineData(
+            res.data.map((slot: any) => ({
+              period: slot.periodId || slot.period || slot.startTime || "Period",
+              time: slot.time || `${slot.startTime || ""} – ${slot.endTime || ""}`.trim(),
+              subject: slot.subject || slot.courseName || "Class",
+              teacher: slot.teacher || slot.teacherName || "TBA",
+              room: slot.room || "—",
+            })),
+          );
         } else {
           setRoutineData([]);
         }
