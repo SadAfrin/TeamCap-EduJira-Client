@@ -121,6 +121,12 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       description: "View & edit student personal details",
     },
     {
+      label: "Focus Room & Study Tracker",
+      href: "/dashboard/student/focus-room",
+      icon: "focus-room",
+      description: "Track your study sessions and progress",
+    },
+    {
       label: "My Attendance",
       href: "/dashboard/student/attendance",
       icon: "attendance",

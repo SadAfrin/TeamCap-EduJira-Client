@@ -129,6 +129,16 @@ export default function Navbar() {
           >
             About
           </Link>
+          <Link
+            href="/leaderboard"
+            className={`text-sm transition-colors hover:text-indigo-600 ${
+              isActive("/leaderboard")
+                ? "font-semibold text-indigo-600 underline underline-offset-4"
+                : "font-medium text-slate-600"
+            }`}
+          >
+            Leaderboard
+          </Link>
 
           {/* If Logged in, show direct Dashboard Link */}
           {user && (
@@ -371,6 +381,16 @@ export default function Navbar() {
               }`}
             >
               About
+            </Link>
+            <Link
+              href="/leaderboard"
+              className={`text-sm transition-colors hover:text-indigo-600 ${
+                isActive("/leaderboard")
+                  ? "font-semibold text-indigo-600 underline underline-offset-4"
+                  : "font-medium text-slate-600"
+              }`}
+            >
+              Leaderboard
             </Link>
 
             <div className="mt-2 border-t border-slate-100 pt-4">

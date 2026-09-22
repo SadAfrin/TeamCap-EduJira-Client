@@ -96,7 +96,15 @@ export default function DashboardRootLayout({
 
       verifyStudentApproval();
     }
-  }, [isLoading, isAuthenticated, isUnauthorized, targetPath, router, userRole, user]);
+  }, [
+    isLoading,
+    isAuthenticated,
+    isUnauthorized,
+    targetPath,
+    router,
+    userRole,
+    user,
+  ]);
 
   const handleSignOut = async () => {
     try {
@@ -219,6 +227,16 @@ export default function DashboardRootLayout({
               }`}
             >
               About
+            </Link>
+            <Link
+              href="/leaderboard"
+              className={`text-sm font-medium transition-all duration-200 hover:text-indigo-600 ${
+                isActive("/leaderboard")
+                  ? "text-indigo-600 underline decoration-indigo-600 decoration-2 underline-offset-[12px]"
+                  : "text-slate-500"
+              }`}
+            >
+              Leaderboard
             </Link>
           </div>
         </div>

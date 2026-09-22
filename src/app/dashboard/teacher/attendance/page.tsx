@@ -7,20 +7,56 @@ import toast from "react-hot-toast";
 type StatusValue = "Present" | "Absent" | "Late";
 
 const DEFAULT_FALLBACK_STUDENTS = [
-  { studentId: "STD-801", name: "Rahim Uddin", roll: "01", parentName: "Tariqul Islam" },
-  { studentId: "STD-802", name: "Ayesha Siddiqua", roll: "02", parentName: "Mahmud Hasan" },
-  { studentId: "STD-803", name: "Tanvir Ahmed", roll: "03", parentName: "Kamrul Islam" },
-  { studentId: "STD-804", name: "Farhana Yasmin", roll: "04", parentName: "Rafiqul Islam" },
-  { studentId: "STD-805", name: "Nafis Fuad", roll: "05", parentName: "Anisur Rahman" },
-  { studentId: "STD-806", name: "Sadia Sultana", roll: "06", parentName: "Shahidul Alam" },
-  { studentId: "STD-807", name: "Jubayer Hossain", roll: "07", parentName: "Mokbul Hossain" },
-  { studentId: "STD-808", name: "Nusrat Jahan", roll: "08", parentName: "Nazrul Islam" },
+  {
+    studentId: "STD-802",
+    name: "Ayesha Siddiqua",
+    roll: "02",
+    parentName: "Mahmud Hasan",
+  },
+  {
+    studentId: "STD-803",
+    name: "Tanvir Ahmed",
+    roll: "03",
+    parentName: "Kamrul Islam",
+  },
+  {
+    studentId: "STD-804",
+    name: "Farhana Yasmin",
+    roll: "04",
+    parentName: "Rafiqul Islam",
+  },
+  {
+    studentId: "STD-805",
+    name: "Nafis Fuad",
+    roll: "05",
+    parentName: "Anisur Rahman",
+  },
+  {
+    studentId: "STD-806",
+    name: "Sadia Sultana",
+    roll: "06",
+    parentName: "Shahidul Alam",
+  },
+  {
+    studentId: "STD-807",
+    name: "Jubayer Hossain",
+    roll: "07",
+    parentName: "Mokbul Hossain",
+  },
+  {
+    studentId: "STD-808",
+    name: "Nusrat Jahan",
+    roll: "08",
+    parentName: "Nazrul Islam",
+  },
 ];
 
 export default function TeacherAttendancePage() {
   const [className, setClassName] = useState("Class 8");
   const [section, setSection] = useState("B");
-  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(
+    () => new Date().toISOString().split("T")[0],
+  );
   const [students, setStudents] = useState<any[]>([]);
   const [statusMap, setStatusMap] = useState<Record<string, StatusValue>>({});
   const [loading, setLoading] = useState(false);
@@ -45,7 +81,9 @@ export default function TeacherAttendancePage() {
 
     try {
       // 2. Fetch student roster from backend
-      const res = await apiGet(`/api/students?className=${encodeURIComponent(className)}&section=${encodeURIComponent(section)}`);
+      const res = await apiGet(
+        `/api/students?className=${encodeURIComponent(className)}&section=${encodeURIComponent(section)}`,
+      );
       let studentList: any[] = [];
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         studentList = res.data;
@@ -62,11 +100,22 @@ export default function TeacherAttendancePage() {
       });
 
       try {
-        const attRes = await apiGet(`/api/attendance?className=${encodeURIComponent(className)}&section=${encodeURIComponent(section)}&date=${date}`);
-        if (attRes.success && Array.isArray(attRes.data) && attRes.data.length > 0) {
+        const attRes = await apiGet(
+          `/api/attendance?className=${encodeURIComponent(className)}&section=${encodeURIComponent(section)}&date=${date}`,
+        );
+        if (
+          attRes.success &&
+          Array.isArray(attRes.data) &&
+          attRes.data.length > 0
+        ) {
           attRes.data.forEach((rec: any) => {
             const sid = rec.studentId?.trim();
-            if (sid && (rec.status === "Present" || rec.status === "Absent" || rec.status === "Late")) {
+            if (
+              sid &&
+              (rec.status === "Present" ||
+                rec.status === "Absent" ||
+                rec.status === "Late")
+            ) {
               defaults[sid] = rec.status as StatusValue;
             }
           });
@@ -149,18 +198,26 @@ export default function TeacherAttendancePage() {
       if (res.success) {
         toast.success(`Attendance saved for ${students.length} students! ✓`);
       } else {
-        toast.success(`Attendance saved locally for ${students.length} students! ✓`);
+        toast.success(
+          `Attendance saved locally for ${students.length} students! ✓`,
+        );
       }
     } catch (err: any) {
       console.warn("Backend save notice:", err);
-      toast.success(`Attendance recorded successfully for ${students.length} students! ✓`);
+      toast.success(
+        `Attendance recorded successfully for ${students.length} students! ✓`,
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const presentCount = Object.values(statusMap).filter((v) => v === "Present").length;
-  const absentCount = Object.values(statusMap).filter((v) => v === "Absent").length;
+  const presentCount = Object.values(statusMap).filter(
+    (v) => v === "Present",
+  ).length;
+  const absentCount = Object.values(statusMap).filter(
+    (v) => v === "Absent",
+  ).length;
   const lateCount = Object.values(statusMap).filter((v) => v === "Late").length;
 
   return (
@@ -168,8 +225,13 @@ export default function TeacherAttendancePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900">Digital Classroom Attendance</h1>
-          <p className="text-xs text-slate-500 mt-1">Mark daily roll call with real-time student and parent synchronization</p>
+          <h1 className="text-2xl font-black text-slate-900">
+            Digital Classroom Attendance
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Mark daily roll call with real-time student and parent
+            synchronization
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
@@ -194,7 +256,9 @@ export default function TeacherAttendancePage() {
       {/* Selector Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Class</label>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Class
+          </label>
           <select
             value={className}
             onChange={(e) => setClassName(e.target.value)}
@@ -209,7 +273,9 @@ export default function TeacherAttendancePage() {
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Section</label>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Section
+          </label>
           <select
             value={section}
             onChange={(e) => setSection(e.target.value)}
@@ -222,7 +288,9 @@ export default function TeacherAttendancePage() {
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date</label>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Date
+          </label>
           <input
             type="date"
             value={date}
@@ -235,15 +303,25 @@ export default function TeacherAttendancePage() {
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-center">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Present</span>
-          <p className="mt-1 text-2xl font-black text-emerald-900">{presentCount}</p>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+            Present
+          </span>
+          <p className="mt-1 text-2xl font-black text-emerald-900">
+            {presentCount}
+          </p>
         </div>
         <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-4 text-center">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Absent</span>
-          <p className="mt-1 text-2xl font-black text-rose-900">{absentCount}</p>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700">
+            Absent
+          </span>
+          <p className="mt-1 text-2xl font-black text-rose-900">
+            {absentCount}
+          </p>
         </div>
         <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-center">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Late</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+            Late
+          </span>
           <p className="mt-1 text-2xl font-black text-amber-900">{lateCount}</p>
         </div>
       </div>
@@ -251,11 +329,14 @@ export default function TeacherAttendancePage() {
       {/* Student Attendance Table */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
         <h3 className="font-bold text-slate-900 text-sm mb-4">
-          Student Roster for {className} – Section {section} ({students.length} students)
+          Student Roster for {className} – Section {section} ({students.length}{" "}
+          students)
         </h3>
 
         {loading ? (
-          <div className="py-12 text-center text-xs text-slate-400">Loading roster...</div>
+          <div className="py-12 text-center text-xs text-slate-400">
+            Loading roster...
+          </div>
         ) : students.length === 0 ? (
           <div className="py-12 text-center text-xs text-slate-400">
             No students found in {className} – Section {section}.
@@ -265,37 +346,46 @@ export default function TeacherAttendancePage() {
             {students.map((s) => {
               const currentSt = statusMap[s.studentId] || "Present";
               return (
-                <div key={s.studentId} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 gap-3">
+                <div
+                  key={s.studentId}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 gap-3"
+                >
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 font-bold text-xs text-slate-700 font-mono">
                       #{s.roll || "01"}
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900 text-xs">{s.name}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">{s.studentId} • Guardian: {s.parentName || "—"}</p>
+                      <p className="font-bold text-slate-900 text-xs">
+                        {s.name}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono">
+                        {s.studentId} • Guardian: {s.parentName || "—"}
+                      </p>
                     </div>
                   </div>
 
                   {/* Status Toggle Buttons */}
                   <div className="flex items-center gap-1.5 self-end sm:self-center">
-                    {(["Present", "Absent", "Late"] as StatusValue[]).map((st) => (
-                      <button
-                        key={st}
-                        type="button"
-                        onClick={() => setStudentStatus(s.studentId, st)}
-                        className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                          currentSt === st
-                            ? st === "Present"
-                              ? "bg-emerald-600 text-white shadow-xs"
-                              : st === "Absent"
-                              ? "bg-rose-600 text-white shadow-xs"
-                              : "bg-amber-500 text-white shadow-xs"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
-                      >
-                        {st}
-                      </button>
-                    ))}
+                    {(["Present", "Absent", "Late"] as StatusValue[]).map(
+                      (st) => (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => setStudentStatus(s.studentId, st)}
+                          className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                            currentSt === st
+                              ? st === "Present"
+                                ? "bg-emerald-600 text-white shadow-xs"
+                                : st === "Absent"
+                                  ? "bg-rose-600 text-white shadow-xs"
+                                  : "bg-amber-500 text-white shadow-xs"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          }`}
+                        >
+                          {st}
+                        </button>
+                      ),
+                    )}
                   </div>
                 </div>
               );
