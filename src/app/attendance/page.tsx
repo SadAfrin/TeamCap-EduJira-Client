@@ -2,19 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
-import {
-  MOCK_STUDENTS,
-  CLASSES,
-  SECTIONS,
-  MockStudent,
-} from "@/data/mockAttendance";
 
-// Flip to false once the backend is deployed and reachable
-const USE_MOCK_DATA = true;
+type Student = {
+  _id?: string;
+  studentId: string;
+  name: string;
+  className?: string;
+  section?: string;
+};
 
-type Student = MockStudent;
 type StatusValue = "Present" | "Absent" | "Late" | "Informed";
 
+const CLASSES = Array.from({ length: 10 }, (_, i) => `Class ${i + 1}`);
+const SECTIONS = ["A", "B"];
 const STATUS_OPTIONS: StatusValue[] = ["Present", "Absent", "Late", "Informed"];
 
 const AVATAR_PALETTE = [
@@ -48,71 +48,92 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function loadRoster() {
     setLoading(true);
     setSaved(false);
+    setError(null);
 
-    if (USE_MOCK_DATA) {
-      const filtered = MOCK_STUDENTS.filter(
-        (s) => s.className === className && s.section === section,
-      );
-      setStudents(filtered);
-      const defaults: Record<string, StatusValue> = {};
-      filtered.forEach((s) => (defaults[s._id] = "Present"));
-      setStatusMap(defaults);
+    const json = await apiGet(
+      `/api/students?className=${encodeURIComponent(className)}&section=${encodeURIComponent(section)}`,
+    );
+
+    if (!json.success || !Array.isArray(json.data)) {
+      setStudents([]);
+      setStatusMap({});
+      setError(json.message || "Could not load students from the server.");
       setLoading(false);
       return;
     }
 
-    const json = await apiGet(
-      `/students?className=${encodeURIComponent(className)}&section=${section}`,
-    );
-    if (json.success) {
-      setStudents(json.data);
-      const defaults: Record<string, StatusValue> = {};
-      json.data.forEach((s: Student) => (defaults[s._id] = "Present"));
+    const roster: Student[] = json.data;
+    setStudents(roster);
 
-      const existing = await apiGet(
-        `/attendance?className=${encodeURIComponent(className)}&section=${section}&date=${date}`,
-      );
-      if (existing.success) {
-        existing.data.forEach((rec: any) => {
-          defaults[rec.studentId] = rec.status;
-        });
-      }
-      setStatusMap(defaults);
+    const defaults: Record<string, StatusValue> = {};
+    roster.forEach((s) => {
+      if (s.studentId) defaults[s.studentId] = "Present";
+    });
+
+    const existing = await apiGet(
+      `/api/attendance?className=${encodeURIComponent(className)}&section=${encodeURIComponent(section)}&date=${date}`,
+    );
+    if (existing.success && Array.isArray(existing.data)) {
+      existing.data.forEach((rec: { studentId?: string; status?: string }) => {
+        const sid = rec.studentId?.trim();
+        if (
+          sid &&
+          (rec.status === "Present" ||
+            rec.status === "Absent" ||
+            rec.status === "Late" ||
+            rec.status === "Informed")
+        ) {
+          defaults[sid] = rec.status;
+        }
+      });
     }
+
+    setStatusMap(defaults);
     setLoading(false);
   }
 
   useEffect(() => {
     loadRoster();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [className, section]);
 
-  function setStatus(studentDbId: string, status: StatusValue) {
-    setStatusMap((prev) => ({ ...prev, [studentDbId]: status }));
+  function setStatus(studentId: string, status: StatusValue) {
+    setStatusMap((prev) => ({ ...prev, [studentId]: status }));
+    setSaved(false);
   }
 
   async function handleSave() {
+    if (students.length === 0) return;
     setSaving(true);
+    setSaved(false);
+    setError(null);
 
-    if (USE_MOCK_DATA) {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      setSaving(false);
-      setSaved(true);
-      return;
-    }
+    const entries = students
+      .filter((s) => s.studentId)
+      .map((s) => ({
+        studentId: s.studentId,
+        studentName: s.name,
+        status: statusMap[s.studentId] || "Present",
+      }));
 
-    const entries = students.map((s) => ({
-      studentId: s._id,
-      studentName: s.name,
-      status: statusMap[s._id] || "Present",
-    }));
+    const res = await apiPost("/api/attendance/bulk", {
+      className,
+      section,
+      date,
+      entries,
+    });
 
-    await apiPost("/attendance/bulk", { className, section, date, entries });
     setSaving(false);
-    setSaved(true);
+    if (res.success) {
+      setSaved(true);
+    } else {
+      setError(res.message || "Failed to save attendance. Please try again.");
+    }
   }
 
   const summary = useMemo(() => {
@@ -123,7 +144,7 @@ export default function AttendancePage() {
       Informed: 0,
     };
     students.forEach((s) => {
-      const status = statusMap[s._id];
+      const status = statusMap[s.studentId];
       if (status) counts[status]++;
     });
     return counts;
@@ -146,7 +167,6 @@ export default function AttendancePage() {
   return (
     <div className="min-h-full bg-slate-50">
       <div className="mx-auto max-w-4xl px-6 py-16 lg:px-8">
-        {/* Eyebrow badge, matching homepage hero */}
         <div className="mb-6 inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-50/50 px-3 py-1 text-sm font-medium text-indigo-600 backdrop-blur-sm">
           <span className="mr-2 flex h-2 w-2 animate-pulse rounded-full bg-indigo-600"></span>
           Digital Attendance
@@ -167,7 +187,6 @@ export default function AttendancePage() {
           </p>
         </div>
 
-        {/* Filters */}
         <div className="mt-8 flex gap-4">
           <div className="flex flex-col">
             <label className="mb-1 text-sm font-medium text-slate-600">
@@ -199,7 +218,12 @@ export default function AttendancePage() {
           </div>
         </div>
 
-        {/* Summary strip, echoes homepage stat row (4 Portals / 0 Overlaps / 100% Client) */}
+        {error && (
+          <p className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </p>
+        )}
+
         {students.length > 0 && (
           <div className="mt-8 flex gap-8 border-t border-b border-slate-200 py-5">
             {STATUS_OPTIONS.map((opt) => (
@@ -215,7 +239,6 @@ export default function AttendancePage() {
           </div>
         )}
 
-        {/* Roster */}
         <div className="mt-8">
           {loading ? (
             <p className="text-slate-400">Loading roster...</p>
@@ -229,7 +252,7 @@ export default function AttendancePage() {
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 {students.map((s, i) => (
                   <div
-                    key={s._id}
+                    key={s.studentId || s._id}
                     className={`flex items-center justify-between px-6 py-4 ${
                       i !== students.length - 1
                         ? "border-b border-slate-100"
@@ -259,9 +282,9 @@ export default function AttendancePage() {
                         <button
                           key={opt}
                           type="button"
-                          onClick={() => setStatus(s._id, opt)}
+                          onClick={() => setStatus(s.studentId, opt)}
                           className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                            statusMap[s._id] === opt
+                            statusMap[s.studentId] === opt
                               ? statusStyle[opt]
                               : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50"
                           }`}
