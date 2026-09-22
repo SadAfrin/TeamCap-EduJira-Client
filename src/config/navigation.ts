@@ -152,13 +152,6 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       description: "Interactive AI study/homework helper",
     },
     {
-      label: "Career & Skill Tracker",
-      href: "/dashboard/student/career-tracker",
-      icon: "career",
-      badge: "Growth",
-      description: "AI-based skill growth and career insights",
-    },
-    {
       label: "Leave Application",
       href: "/dashboard/student/leaves",
       icon: "leaves",

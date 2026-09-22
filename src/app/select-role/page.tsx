@@ -2,7 +2,7 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
-import { GraduationCap, Presentation, Users, Loader2 } from "lucide-react";
+import { FiBookOpen, FiMonitor, FiUsers, FiLoader } from "react-icons/fi";
 
 export default function SelectRolePage() {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -53,14 +53,14 @@ export default function SelectRolePage() {
             className="group relative flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-gray-100 bg-white hover:border-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="h-16 w-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
-              <GraduationCap size={32} />
+              <FiBookOpen size={32} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Student</h3>
             <p className="text-sm text-gray-500 text-center">
               Access your classes, assignments, and timetable.
             </p>
             {isUpdating && selected === "student" && (
-              <Loader2 className="absolute top-4 right-4 animate-spin text-indigo-600" />
+              <FiLoader className="absolute top-4 right-4 animate-spin text-indigo-600" />
             )}
           </button>
 
@@ -72,14 +72,14 @@ export default function SelectRolePage() {
             className="group relative flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-gray-100 bg-white hover:border-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="h-16 w-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
-              <Presentation size={32} />
+              <FiMonitor size={32} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Teacher</h3>
             <p className="text-sm text-gray-500 text-center">
               Manage classes, grade assignments, and track attendance.
             </p>
             {isUpdating && selected === "teacher" && (
-              <Loader2 className="absolute top-4 right-4 animate-spin text-purple-600" />
+              <FiLoader className="absolute top-4 right-4 animate-spin text-purple-600" />
             )}
           </button>
 
@@ -91,14 +91,14 @@ export default function SelectRolePage() {
             className="group relative flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-gray-100 bg-white hover:border-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
-              <Users size={32} />
+              <FiUsers size={32} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Parent</h3>
             <p className="text-sm text-gray-500 text-center">
               Monitor academic progress and stay connected.
             </p>
             {isUpdating && selected === "parent" && (
-              <Loader2 className="absolute top-4 right-4 animate-spin text-blue-600" />
+              <FiLoader className="absolute top-4 right-4 animate-spin text-blue-600" />
             )}
           </button>
         </div>

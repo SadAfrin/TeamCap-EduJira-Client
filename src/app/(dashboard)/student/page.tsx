@@ -104,7 +104,7 @@ export default function StudentDashboard() {
           { label: "Assignments", icon: "📝", href: "/dashboard/student/assignments", color: "hover:border-purple-300" },
           { label: "Exam Results", icon: "🏆", href: "/dashboard/student/results", color: "hover:border-amber-300" },
           { label: "AI Tutor Bot", icon: "🤖", href: "/dashboard/student/ai-tutor", color: "hover:border-indigo-300" },
-          { label: "Career Tracker", icon: "🚀", href: "/dashboard/student/career-tracker", color: "hover:border-rose-300" },
+          { label: "Leave Request", icon: "🏖️", href: "/dashboard/student/leaves", color: "hover:border-teal-300" },
         ].map((item, idx) => (
           <Link
             key={idx}
