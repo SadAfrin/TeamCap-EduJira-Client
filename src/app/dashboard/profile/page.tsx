@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { ROLE_DETAILS } from "@/config/navigation";
 import { UserRole } from "@/types/navigation";
-import { apiGet, apiPut, apiPost } from "@/lib/api";
+import { apiGet, apiPut } from "@/lib/api";
 import UserAvatar from "@/components/common/UserAvatar";
 import toast from "react-hot-toast";
 import LinkChildModal from "@/components/dashboard/LinkChildModal";
@@ -118,7 +118,9 @@ export default function ProfilePage() {
                 parentEmail: doc.parentEmail || initialData.parentEmail,
                 parentPhone: doc.parentPhone || initialData.parentPhone,
                 designation: doc.designation || initialData.designation,
-                subject: doc.subject || initialData.subject,
+                subject: Array.isArray(doc.subjectsAssigned)
+                  ? doc.subjectsAssigned.join(", ")
+                  : doc.subject || initialData.subject,
                 qualification: doc.qualification || initialData.qualification,
                 occupation: doc.occupation || initialData.occupation,
               };
@@ -151,38 +153,66 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      // 1. Try to update backend role profile if ID / identifier exists
       const targetId = formData.id || formData.studentId || user?.email;
-      if (targetId) {
-        let endpoint = "";
-        if (userRole === "student" && formData.studentId) {
-          endpoint = `/api/students/${formData.studentId}`;
-        } else if (userRole === "teacher" && formData.id) {
-          endpoint = `/api/teachers/${formData.id}`;
-        } else if (userRole === "parent" && (formData.id || user?.email)) {
-          endpoint = `/api/parents/${formData.id || encodeURIComponent(user?.email || "")}`;
-        } else if (userRole === "admin" && formData.id) {
-          endpoint = `/api/admins/${formData.id}`;
-        }
-
-        if (endpoint) {
-          try {
-            await apiPut(endpoint, formData);
-          } catch (err) {
-            console.warn("Backend profile update fallback:", err);
-          }
-        }
+      if (!targetId) {
+        toast.error("Could not find your profile record to update.");
+        return;
       }
 
-      // 2. Save local copy in localStorage for persistence across reloads
-      try {
-        localStorage.setItem(
-          `edujira_profile_${user?.email || "user"}`,
-          JSON.stringify(formData),
-        );
-      } catch {}
+      let endpoint = "";
+      if (userRole === "student" && formData.studentId) {
+        endpoint = `/api/students/${formData.studentId}`;
+      } else if (userRole === "teacher" && formData.id) {
+        endpoint = `/api/teachers/${formData.id}`;
+      } else if (userRole === "parent" && (formData.id || user?.email)) {
+        endpoint = `/api/parents/${formData.id || encodeURIComponent(user?.email || "")}`;
+      } else if (userRole === "admin" && formData.id) {
+        endpoint = `/api/admins/${formData.id}`;
+      }
 
-      toast.success("Profile details updated successfully! 🎉");
+      if (!endpoint) {
+        toast.error("Profile update is not available for this account yet.");
+        return;
+      }
+
+      const subjectsAssigned = formData.subject
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const payload =
+        userRole === "teacher"
+          ? {
+              name: formData.name,
+              phone: formData.phone,
+              gender: formData.gender,
+              designation: formData.designation,
+              qualification: formData.qualification,
+              subjectsAssigned,
+            }
+          : {
+              name: formData.name,
+              phone: formData.phone,
+              address: formData.address,
+              bio: formData.bio,
+              gender: formData.gender,
+              bloodGroup: formData.bloodGroup,
+              className: formData.className,
+              section: formData.section,
+              roll: formData.roll,
+              parentName: formData.parentName,
+              parentEmail: formData.parentEmail,
+              parentPhone: formData.parentPhone,
+              occupation: formData.occupation,
+            };
+
+      const res = await apiPut(endpoint, payload);
+      if (!res.success) {
+        toast.error(res.message || "Failed to update profile on the server.");
+        return;
+      }
+
+      toast.success("Profile details updated successfully!");
     } catch (err: any) {
       toast.error(err.message || "Failed to update profile.");
     } finally {
