@@ -98,7 +98,7 @@ export default function AdminOverviewPage() {
             <span className="text-3xl font-extrabold text-slate-900">{loading ? "..." : `${stats?.attendanceRate ?? 95}%`}</span>
             <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Daily Average</span>
           </div>
-          <Link href="/attendance" className="mt-3 block text-xs font-semibold text-amber-600 hover:text-amber-700">View attendance logs →</Link>
+          <Link href="/dashboard/admin/academic" className="mt-3 block text-xs font-semibold text-amber-600 hover:text-amber-700">View academic overview →</Link>
         </div>
       </div>
 

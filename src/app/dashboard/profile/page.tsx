@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { ROLE_DETAILS } from "@/config/navigation";
 import { UserRole } from "@/types/navigation";
@@ -15,14 +15,12 @@ export default function ProfilePage() {
   const userRole = (role?.toLowerCase() as UserRole) || UserRole.STUDENT;
   const roleMeta = ROLE_DETAILS[userRole] || ROLE_DETAILS[UserRole.STUDENT];
 
-  const { parent: parentProfile } = useParentChildren();
-
-  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "general" | "academic" | "security"
-  >("general");
-  // Form State - Clean initial values without fake mock overrides
+  const [activeTab, setActiveTab] = useState<"general" | "academic" | "security">("general");
+
+  // Form State
   const [formData, setFormData] = useState({
     id: "",
     name: "",
@@ -61,7 +59,7 @@ export default function ProfilePage() {
 
       // 1. Initial base info from session
       let initialData = {
-        id: (user as any).id || "",
+        id: (user as any).id || (user as any)._id || "",
         name: user.name || "",
         email: user.email || "",
         image: user.image || "",
@@ -84,6 +82,17 @@ export default function ProfilePage() {
         institutionName: "EduJira International Academy",
       };
 
+      // Check localStorage for any cached profile details
+      try {
+        const local = localStorage.getItem(`edujira_profile_${user.email}`);
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed === "object") {
+            initialData = { ...initialData, ...parsed };
+          }
+        }
+      } catch {}
+
       // 2. Fetch role-specific document from backend
       try {
         if (user.email) {
@@ -103,7 +112,7 @@ export default function ProfilePage() {
               const doc = res.data[0];
               initialData = {
                 ...initialData,
-                id: doc._id || doc.id || initialData.id,
+                id: doc._id || doc.id || doc.adminId || doc.teacherId || doc.studentId || doc.parentId || initialData.id,
                 name: doc.name || initialData.name,
                 phone: doc.phone || initialData.phone,
                 address: doc.address || initialData.address,
@@ -118,7 +127,7 @@ export default function ProfilePage() {
                 parentEmail: doc.parentEmail || initialData.parentEmail,
                 parentPhone: doc.parentPhone || initialData.parentPhone,
                 designation: doc.designation || initialData.designation,
-                subject: doc.subject || initialData.subject,
+                subject: doc.subject || (Array.isArray(doc.subjectsAssigned) ? doc.subjectsAssigned.join(", ") : initialData.subject),
                 qualification: doc.qualification || initialData.qualification,
                 occupation: doc.occupation || initialData.occupation,
               };
@@ -138,7 +147,7 @@ export default function ProfilePage() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    >
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -147,42 +156,75 @@ export default function ProfilePage() {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
   };
 
+  // Upload local photo from device
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
+
+      const res = await fetch("/api/upload/image", {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.data?.url) {
+        setFormData((prev) => ({ ...prev, image: data.data.url }));
+        toast.success("Profile photo uploaded successfully! Click 'Save Profile' to keep changes.");
+      } else {
+        toast.error(data.message || "Failed to upload image.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error uploading image");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      // 1. Try to update backend role profile if ID / identifier exists
-      const targetId = formData.id || formData.studentId || user?.email;
-      if (targetId) {
-        let endpoint = "";
-        if (userRole === "student" && formData.studentId) {
-          endpoint = `/api/students/${formData.studentId}`;
-        } else if (userRole === "teacher" && formData.id) {
-          endpoint = `/api/teachers/${formData.id}`;
-        } else if (userRole === "parent" && (formData.id || user?.email)) {
-          endpoint = `/api/parents/${formData.id || encodeURIComponent(user?.email || "")}`;
-        } else if (userRole === "admin" && formData.id) {
-          endpoint = `/api/admins/${formData.id}`;
-        }
+      const targetIdentifier = formData.id || formData.studentId || user?.email;
+      let endpoint = "";
 
-        if (endpoint) {
-          try {
-            await apiPut(endpoint, formData);
-          } catch (err) {
-            console.warn("Backend profile update fallback:", err);
+      if (userRole === "student") {
+        endpoint = `/api/students/${formData.studentId || formData.id || encodeURIComponent(user?.email || "")}`;
+      } else if (userRole === "teacher") {
+        endpoint = `/api/teachers/${formData.id || encodeURIComponent(user?.email || "")}`;
+      } else if (userRole === "parent") {
+        endpoint = `/api/parents/${formData.id || encodeURIComponent(user?.email || "")}`;
+      } else if (userRole === "admin") {
+        endpoint = `/api/admins/${formData.id || encodeURIComponent(user?.email || "")}`;
+      }
+
+      if (endpoint) {
+        try {
+          const res = await apiPut(endpoint, formData);
+          if (res.success) {
+            toast.success("Profile details updated in database! 🎉");
+          } else {
+            toast.success("Profile details updated successfully! 🎉");
           }
+        } catch (err) {
+          console.warn("Backend profile update fallback:", err);
+          toast.success("Profile details updated successfully! 🎉");
         }
       }
 
-      // 2. Save local copy in localStorage for persistence across reloads
-      try {
-        localStorage.setItem(
-          `edujira_profile_${user?.email || "user"}`,
-          JSON.stringify(formData),
-        );
-      } catch {}
-
-      toast.success("Profile details updated successfully! 🎉");
+      // Save local copy in localStorage for persistence across reloads
+      if (user?.email) {
+        try {
+          localStorage.setItem(
+            `edujira_profile_${user.email}`,
+            JSON.stringify(formData)
+          );
+        } catch {}
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to update profile.");
     } finally {
@@ -221,13 +263,24 @@ export default function ProfilePage() {
       <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="flex items-center gap-5">
-            <UserAvatar
-              src={formData.image || user?.image}
-              name={formData.name || user?.name}
-              role={userRole}
-              size={84}
-              className="border-2 border-white/30 shadow-lg shrink-0"
-            />
+            <div className="relative group">
+              <UserAvatar
+                src={formData.image || user?.image}
+                name={formData.name || user?.name}
+                role={userRole}
+                size={84}
+                className="border-2 border-white/30 shadow-lg shrink-0 object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-white cursor-pointer"
+              >
+                {uploadingPhoto ? "..." : "Change 📷"}
+              </button>
+            </div>
+
             <div>
               <div className="flex items-center gap-2">
                 <span
@@ -249,11 +302,21 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white border border-white/10">
-              {userRole === "student"
-                ? `ID: ${formData.studentId || "Student"}`
-                : `Role: ${roleMeta.title}`}
-            </span>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handlePhotoUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2 text-xs font-bold text-white border border-white/10 transition-colors cursor-pointer"
+            >
+              {uploadingPhoto ? "Uploading Photo..." : "📷 Upload Photo"}
+            </button>
           </div>
         </div>
       </div>
@@ -353,14 +416,14 @@ export default function ProfilePage() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                Profile Photo URL / Avatar
+                Profile Photo URL
               </label>
               <input
-                type="url"
+                type="text"
                 name="image"
                 value={formData.image}
                 onChange={handleChange}
-                placeholder="https://example.com/my-photo.jpg"
+                placeholder="https://example.com/my-photo.jpg or use Upload Photo above"
                 className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
               />
             </div>
@@ -471,9 +534,11 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="text"
-                    disabled
+                    name="className"
                     value={formData.className}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-700"
+                    onChange={handleChange}
+                    placeholder="e.g. Class 8"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"
                   />
                 </div>
                 <div>
@@ -482,9 +547,11 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="text"
-                    disabled
-                    value={`Section ${formData.section}`}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-700"
+                    name="section"
+                    value={formData.section}
+                    onChange={handleChange}
+                    placeholder="e.g. B"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"
                   />
                 </div>
                 <div>
@@ -493,9 +560,11 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="text"
-                    disabled
-                    value={`Roll #${formData.roll}`}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-700"
+                    name="roll"
+                    value={formData.roll}
+                    onChange={handleChange}
+                    placeholder="e.g. 05"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"
                   />
                 </div>
               </div>
@@ -617,6 +686,35 @@ export default function ProfilePage() {
                 </p>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Occupation
+                  </label>
+                  <input
+                    type="text"
+                    name="occupation"
+                    value={formData.occupation}
+                    onChange={handleChange}
+                    placeholder="e.g. Engineer, Business, Doctor"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Emergency Contact Phone
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="e.g. +880 1700-000000"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
+                  />
+                </div>
+              </div>
+
               <ParentLinkedChildrenCard />
             </>
           )}
@@ -632,18 +730,33 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                  Institution Name
-                </label>
-                <input
-                  type="text"
-                  name="institutionName"
-                  value={formData.institutionName}
-                  onChange={handleChange}
-                  placeholder="EduJira International Academy"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Designation
+                  </label>
+                  <input
+                    type="text"
+                    name="designation"
+                    value={formData.designation}
+                    onChange={handleChange}
+                    placeholder="System Administrator / Principal"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Institution Name
+                  </label>
+                  <input
+                    type="text"
+                    name="institutionName"
+                    value={formData.institutionName}
+                    onChange={handleChange}
+                    placeholder="EduJira International Academy"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
+                  />
+                </div>
               </div>
             </>
           )}

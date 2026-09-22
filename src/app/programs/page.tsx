@@ -32,7 +32,7 @@ const aiFeatures = [
   },
 ];
 
-const operationsFeatures = [
+const operationsFeatures: { title: string; body: string; link?: string }[] = [
   {
     title: "Role-based dashboards",
     body: "Separate, customized dashboards for admin, teacher, and student or parent roles, each showing only what's relevant.",
@@ -40,7 +40,6 @@ const operationsFeatures = [
   {
     title: "Digital attendance management",
     body: "Teachers mark and track daily attendance digitally, with automatic summary reports.",
-    link: "/attendance"
   },
   {
     title: "Result & grade management system",
