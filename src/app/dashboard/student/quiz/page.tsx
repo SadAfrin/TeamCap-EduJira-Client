@@ -42,7 +42,7 @@ export default function AIQuizPage() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}api/quizzes/generate`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/quizzes/generate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -93,7 +93,7 @@ export default function AIQuizPage() {
     const toastId = toast.loading("Saving your results...");
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/quizzes/save`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quizzes/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
