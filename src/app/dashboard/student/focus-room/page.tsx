@@ -52,7 +52,7 @@ export default function FocusRoomPage() {
     const loadingToast = toast.loading("Saving your study session...");
 
     try {
-      const response = await fetch("http://localhost:5000/api/study-sessions", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
