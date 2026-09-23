@@ -29,7 +29,7 @@ export default function QuizHistoryPage() {
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/quizzes/history?studentId=${session.user.id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}api/quizzes/history/${session.user.id}`,
         );
         const json = await res.json();
 
