@@ -85,13 +85,13 @@ export default function AdminDashboard() {
               <span>Add Student</span>
             </Link>
             <Link
-              href="/attendance"
+              href="/admin/classes"
               className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20 border border-white/15"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Mark Attendance</span>
+              <span>Academic Setup</span>
             </Link>
           </div>
         </div>
@@ -178,7 +178,7 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
             <span>{stats?.presentToday ?? 0} Present recorded</span>
-            <Link href="/attendance" className="font-semibold text-amber-600 hover:text-amber-700">Records →</Link>
+            <Link href="/admin/classes" className="font-semibold text-amber-600 hover:text-amber-700">Setup →</Link>
           </div>
         </div>
       </div>

@@ -10,7 +10,11 @@ import { useParentChildren } from "@/hooks/useParentChildren";
 
 export default function ParentDashboard() {
   const { role, user, isLoading } = useAuthRole();
-  const { parent, children: linkedChildren, reload: reloadParent } = useParentChildren();
+  const {
+    parent,
+    children: linkedChildren,
+    reload: reloadParent,
+  } = useParentChildren();
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const router = useRouter();
   const [parentData, setParentData] = useState<any>(null);
@@ -33,13 +37,17 @@ export default function ParentDashboard() {
       try {
         setLoading(true);
         const [statsRes, noticesRes] = await Promise.all([
-          apiGet(`/api/stats/parent-portal?email=${encodeURIComponent(user?.email || "")}`),
+          apiGet(
+            `/api/stats/parent-portal?email=${encodeURIComponent(user?.email || "")}`,
+          ),
           apiGet(`/api/notices?role=parent&limit=3`),
         ]);
 
         if (statsRes.success) {
           const rawChildren = statsRes.data?.children || [];
-          const approvedChildren = rawChildren.filter((c: any) => c.status === "approved" || !c.status);
+          const approvedChildren = rawChildren.filter(
+            (c: any) => c.status === "approved" || !c.status,
+          );
           setParentData({ ...statsRes.data, children: approvedChildren });
         }
         if (noticesRes.success) setNotices(noticesRes.data?.slice(0, 3) || []);
@@ -61,11 +69,19 @@ export default function ParentDashboard() {
     async function loadActiveChildData() {
       if (!activeChild?.studentId) return;
       try {
-        const dayOfWeek = new Date().toLocaleDateString('en-US', {weekday: 'long'});
+        const dayOfWeek = new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+        });
         const [attendanceRes, resultsRes, routineRes] = await Promise.all([
-          apiGet(`/api/stats/student-portal?studentId=${activeChild.studentId}`),
-          apiGet(`/api/results/transcript?studentId=${activeChild.studentId}&term=All`),
-          apiGet(`/api/routines?className=${activeChild.className}&section=${activeChild.section}&day=${dayOfWeek}`)
+          apiGet(
+            `/api/stats/student-portal?studentId=${activeChild.studentId}`,
+          ),
+          apiGet(
+            `/api/results/transcript?studentId=${activeChild.studentId}&term=All`,
+          ),
+          apiGet(
+            `/api/routines?className=${activeChild.className}&section=${activeChild.section}&day=${dayOfWeek}`,
+          ),
         ]);
 
         setChildStats({
@@ -74,9 +90,9 @@ export default function ParentDashboard() {
         });
 
         if (routineRes.success && routineRes.data.length > 0) {
-           setChildRoutine(routineRes.data[0].periodSlots || []);
+          setChildRoutine(routineRes.data[0].periodSlots || []);
         } else {
-           setChildRoutine([]);
+          setChildRoutine([]);
         }
       } catch (err) {
         console.error("Failed to load active child data:", err);
@@ -106,10 +122,12 @@ export default function ParentDashboard() {
               <span className="text-xs text-slate-300">• Multi-Child Hub</span>
             </div>
             <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Welcome, {parentData?.parent?.name || user?.name || "Guardian"}! 👨‍👩‍👧
+              Welcome, {parentData?.parent?.name || user?.name || "Guardian"}!
+              👨‍👩‍👧
             </h1>
             <p className="mt-1 text-sm text-slate-300 max-w-xl">
-              Monitor attendance, check transcripts & AI teacher comments, submit leave applications, and message teachers directly.
+              Monitor attendance, check transcripts & AI teacher comments,
+              submit leave applications, and message teachers directly.
             </p>
           </div>
 
@@ -133,9 +151,12 @@ export default function ParentDashboard() {
       {children.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 py-16 text-center shadow-sm">
           <div className="text-6xl mb-4">👦👧</div>
-          <h2 className="text-xl font-bold text-slate-800">No Child Linked Yet</h2>
+          <h2 className="text-xl font-bold text-slate-800">
+            No Child Linked Yet
+          </h2>
           <p className="mt-2 text-sm text-slate-500 max-w-md">
-            You haven't linked any children to your parent account. Link a child to monitor their academic progress, attendance, and routines.
+            You haven't linked any children to your parent account. Link a child
+            to monitor their academic progress, attendance, and routines.
           </p>
           <button
             type="button"
@@ -156,8 +177,12 @@ export default function ParentDashboard() {
           {/* Children Selector (if multiple) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Your Enrolled Children ({children.length})</h2>
-              <span className="text-xs text-slate-400">Select child to view academic report</span>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Your Enrolled Children ({children.length})
+              </h2>
+              <span className="text-xs text-slate-400">
+                Select child to view academic report
+              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -175,17 +200,25 @@ export default function ParentDashboard() {
                   >
                     <div
                       className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl font-black text-base shadow-sm ${
-                        isSelected ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-700"
+                        isSelected
+                          ? "bg-amber-600 text-white"
+                          : "bg-slate-100 text-slate-700"
                       }`}
                     >
-                      {child.name?.charAt(0) || child.studentName?.charAt(0) || "C"}
+                      {child.name?.charAt(0) ||
+                        child.studentName?.charAt(0) ||
+                        "C"}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-bold text-slate-900 truncate text-sm">{child.name || child.studentName}</h3>
+                      <h3 className="font-bold text-slate-900 truncate text-sm">
+                        {child.name || child.studentName}
+                      </h3>
                       <p className="text-xs font-semibold text-slate-500 mt-0.5">
                         {child.className} – Section {child.section}
                       </p>
-                      <span className="font-mono text-[10px] text-slate-400">{child.studentId}</span>
+                      <span className="font-mono text-[10px] text-slate-400">
+                        {child.studentId}
+                      </span>
                     </div>
                   </button>
                 );
@@ -196,12 +229,42 @@ export default function ParentDashboard() {
           {/* Quick Actions */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: "Child Progress", icon: "📈", href: `/dashboard/parent/child-progress?studentId=${activeChild.studentId}`, color: "hover:border-amber-300" },
-              { label: "Attendance Logs", icon: "📊", href: `/dashboard/parent/attendance?studentId=${activeChild.studentId}`, color: "hover:border-blue-300" },
-              { label: "Exam Results", icon: "🏆", href: `/dashboard/parent/results?studentId=${activeChild.studentId}`, color: "hover:border-purple-300" },
-              { label: "Leave Request", icon: "✉️", href: `/dashboard/parent/leave-request?studentId=${activeChild.studentId}`, color: "hover:border-emerald-300" },
-              { label: "Translated Notices", icon: "🌐", href: "/dashboard/parent/notices", color: "hover:border-indigo-300" },
-              { label: "Teacher Chat", icon: "💬", href: `/dashboard/parent/messages?studentId=${activeChild.studentId}`, color: "hover:border-rose-300" },
+              {
+                label: "Child Progress",
+                icon: "📈",
+                href: `/dashboard/parent/child-progress?studentId=${activeChild.studentId}`,
+                color: "hover:border-amber-300",
+              },
+              {
+                label: "Attendance Logs",
+                icon: "📊",
+                href: `/dashboard/parent/attendance?studentId=${activeChild.studentId}`,
+                color: "hover:border-blue-300",
+              },
+              {
+                label: "Exam Results",
+                icon: "🏆",
+                href: `/dashboard/parent/results?studentId=${activeChild.studentId}`,
+                color: "hover:border-purple-300",
+              },
+              {
+                label: "Leave Request",
+                icon: "✉️",
+                href: `/dashboard/parent/leave-request?studentId=${activeChild.studentId}`,
+                color: "hover:border-emerald-300",
+              },
+              {
+                label: "Translated Notices",
+                icon: "🌐",
+                href: "/dashboard/parent/notices",
+                color: "hover:border-indigo-300",
+              },
+              {
+                label: "Teacher Chat",
+                icon: "💬",
+                href: `/dashboard/parent/messages?studentId=${activeChild.studentId}`,
+                color: "hover:border-rose-300",
+              },
             ].map((item, idx) => (
               <Link
                 key={idx}
@@ -209,7 +272,9 @@ export default function ParentDashboard() {
                 className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md ${item.color}`}
               >
                 <span className="text-2xl mb-1">{item.icon}</span>
-                <span className="text-xs font-bold text-slate-800 text-center">{item.label}</span>
+                <span className="text-xs font-bold text-slate-800 text-center">
+                  {item.label}
+                </span>
               </Link>
             ))}
           </div>
@@ -218,34 +283,62 @@ export default function ParentDashboard() {
           {activeChild && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Attendance Status</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Attendance Status
+                </span>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-slate-900">{childStats?.attendance?.attendancePercentage ?? 0}%</span>
+                  <span className="text-3xl font-black text-slate-900">
+                    {childStats?.attendance?.attendancePercentage ?? 0}%
+                  </span>
                   <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                    {childStats?.attendance?.attendancePercentage >= 80 ? "Regular" : "Needs Attention"}
+                    {childStats?.attendance?.attendancePercentage >= 80
+                      ? "Regular"
+                      : "Needs Attention"}
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-slate-500">
-                  Present {childStats?.attendance?.attendances?.filter((a: any) => a.status === 'Present' || a.status === 'present').length || 0} out of {childStats?.attendance?.totalDaysMarked || 0} working days
+                  Present{" "}
+                  {childStats?.attendance?.attendances?.filter(
+                    (a: any) =>
+                      a.status === "Present" || a.status === "present",
+                  ).length || 0}{" "}
+                  out of {childStats?.attendance?.totalDaysMarked || 0} working
+                  days
                 </p>
               </div>
 
               <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Academic Standing</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Academic Standing
+                </span>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-slate-900">GPA {childStats?.results?.gpa?.toFixed(2) || "N/A"}</span>
-                  <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded">Grade {childStats?.results?.overallGrade || "N/A"}</span>
+                  <span className="text-3xl font-black text-slate-900">
+                    GPA {childStats?.results?.gpa?.toFixed(2) || "N/A"}
+                  </span>
+                  <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded">
+                    Grade {childStats?.results?.overallGrade || "N/A"}
+                  </span>
                 </div>
-                <p className="mt-2 text-xs text-slate-500">{activeChild.className} – All Terms</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  {activeChild.className} – All Terms
+                </p>
               </div>
 
               <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Class Information</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Class Information
+                </span>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-900">{activeChild.className}</span>
-                  <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">Sec {activeChild.section}</span>
+                  <span className="text-2xl font-black text-slate-900">
+                    {activeChild.className}
+                  </span>
+                  <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                    Sec {activeChild.section}
+                  </span>
                 </div>
-                <p className="mt-2 text-xs text-slate-500">Roll Number: {activeChild.roll || "N/A"}</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Roll Number: {activeChild.roll || "N/A"}
+                </p>
               </div>
             </div>
           )}
@@ -255,23 +348,35 @@ export default function ParentDashboard() {
             {/* Child Schedule */}
             <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-slate-900">{activeChild?.name || activeChild?.studentName || "Child"}'s Routine Schedule</h2>
+                <h2 className="text-base font-bold text-slate-900">
+                  {activeChild?.name || activeChild?.studentName || "Child"}'s
+                  Routine Schedule
+                </h2>
                 <span className="text-xs font-bold text-amber-600">Today</span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">Classes scheduled for this day</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Classes scheduled for this day
+              </p>
 
               <div className="mt-5 space-y-3">
                 {childRoutine.length > 0 ? (
                   childRoutine.map((slot, idx) => (
-                    <div key={idx} className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5"
+                    >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-900">{slot.subject}</span>
+                          <span className="text-xs font-bold text-slate-900">
+                            {slot.subject}
+                          </span>
                           <span className="rounded bg-amber-50 px-1.5 py-0.2 text-[10px] font-bold text-amber-800">
                             {slot.period}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">{slot.teacher} • {slot.room || "TBA"}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {slot.teacher} • {slot.room || "TBA"}
+                        </p>
                       </div>
                       <span className="font-mono text-xs font-semibold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
                         {slot.startTime} - {slot.endTime}
@@ -289,23 +394,37 @@ export default function ParentDashboard() {
             {/* Notices */}
             <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-slate-900">School Notices & Updates</h2>
-                <Link href="/dashboard/parent/notices" className="text-xs font-bold text-amber-600 hover:underline">
+                <h2 className="text-base font-bold text-slate-900">
+                  School Notices & Updates
+                </h2>
+                <Link
+                  href="/dashboard/parent/notices"
+                  className="text-xs font-bold text-amber-600 hover:underline"
+                >
                   Multilingual View →
                 </Link>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">Announcements targeted for parents</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Announcements targeted for parents
+              </p>
 
               <div className="mt-5 space-y-3">
                 {notices.map((n) => (
-                  <div key={n._id} className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4">
+                  <div
+                    key={n._id}
+                    className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4"
+                  >
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-xs font-bold text-slate-900 leading-snug">{n.title}</h4>
+                      <h4 className="text-xs font-bold text-slate-900 leading-snug">
+                        {n.title}
+                      </h4>
                       <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
                         {n.category || "Notice"}
                       </span>
                     </div>
-                    <p className="mt-1.5 text-xs text-slate-600 line-clamp-2">{n.body}</p>
+                    <p className="mt-1.5 text-xs text-slate-600 line-clamp-2">
+                      {n.body}
+                    </p>
                   </div>
                 ))}
                 {notices.length === 0 && (

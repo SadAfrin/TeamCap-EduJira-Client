@@ -27,10 +27,37 @@ export default function DashboardRootLayout({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Normalize role
-  const userRole = (role?.toLowerCase() as UserRole) || UserRole.STUDENT;
+  const normalizedRole = role?.toLowerCase();
+  const userRole = (normalizedRole as UserRole) || UserRole.STUDENT;
   const roleMeta = ROLE_DETAILS[userRole] || ROLE_DETAILS[UserRole.STUDENT];
 
   const isActive = (path: string) => pathname === path;
+
+  // Route authorization check
+  const roleSegments = ["admin", "teacher", "student", "parent"];
+  let isUnauthorized = false;
+  let targetPath = "/dashboard";
+
+  if (normalizedRole) {
+    if (normalizedRole === "pending") {
+      isUnauthorized = true;
+      targetPath = "/select-role";
+    } else {
+      targetPath = `/dashboard/${normalizedRole}`;
+      for (const seg of roleSegments) {
+        const isMatchingSegment =
+          pathname === `/${seg}` ||
+          pathname.startsWith(`/${seg}/`) ||
+          pathname === `/dashboard/${seg}` ||
+          pathname.startsWith(`/dashboard/${seg}/`);
+
+        if (isMatchingSegment && normalizedRole !== seg) {
+          isUnauthorized = true;
+          break;
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     async function verifyStudentApproval() {
@@ -62,18 +89,22 @@ export default function DashboardRootLayout({
         return;
       }
 
-      // Route authorization check
-      const roleSegments = ["admin", "teacher", "student", "parent"];
-      for (const seg of roleSegments) {
-        if (pathname.startsWith(`/dashboard/${seg}`) && userRole !== seg) {
-          router.push(`/dashboard/${userRole}`);
-          return;
-        }
+      if (isUnauthorized) {
+        router.replace(targetPath);
+        return;
       }
 
       verifyStudentApproval();
     }
-  }, [isLoading, isAuthenticated, role, pathname, router, userRole, user]);
+  }, [
+    isLoading,
+    isAuthenticated,
+    isUnauthorized,
+    targetPath,
+    router,
+    userRole,
+    user,
+  ]);
 
   const handleSignOut = async () => {
     try {
@@ -85,20 +116,22 @@ export default function DashboardRootLayout({
     }
   };
 
-  if (isLoading && !user) {
+  if (isLoading || (isAuthenticated && isUnauthorized)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-3 border-indigo-500 border-t-transparent" />
           <p className="text-sm font-semibold tracking-wide text-slate-300">
-            Authenticating EduJira Workspace...
+            {isUnauthorized
+              ? "Redirecting to your authorized workspace..."
+              : "Authenticating EduJira Workspace..."}
           </p>
         </div>
       </div>
     );
   }
 
-  if (!isLoading && !isAuthenticated) return null;
+  if (!isAuthenticated) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
@@ -194,6 +227,16 @@ export default function DashboardRootLayout({
               }`}
             >
               About
+            </Link>
+            <Link
+              href="/leaderboard"
+              className={`text-sm font-medium transition-all duration-200 hover:text-indigo-600 ${
+                isActive("/leaderboard")
+                  ? "text-indigo-600 underline decoration-indigo-600 decoration-2 underline-offset-[12px]"
+                  : "text-slate-500"
+              }`}
+            >
+              Leaderboard
             </Link>
           </div>
         </div>

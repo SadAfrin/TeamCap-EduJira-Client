@@ -17,17 +17,6 @@ type LeaveItem = {
 
 const INITIAL_LEAVES: LeaveItem[] = [
   {
-    id: "LV-101",
-    applicantType: "Student",
-    applicantName: "Rahim Uddin",
-    classOrDesignation: "Class 8 - Sec B",
-    startDate: "2026-09-05",
-    endDate: "2026-09-07",
-    reason: "Viral fever and doctor recommended bed rest.",
-    hasAttachment: true,
-    status: "Pending",
-  },
-  {
     id: "LV-102",
     applicantType: "Teacher",
     applicantName: "Nasrin Sultana",
@@ -56,7 +45,7 @@ export default function LeaveManagementPage() {
 
   function handleAction(id: string, newStatus: "Approved" | "Rejected") {
     setLeaves(
-      leaves.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
+      leaves.map((l) => (l.id === id ? { ...l, status: newStatus } : l)),
     );
     toast.success(`Leave request ${id} marked as ${newStatus}!`);
   }
@@ -65,9 +54,12 @@ export default function LeaveManagementPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Institutional Leave Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Institutional Leave Management
+          </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Review, approve, and manage leave applications submitted by parents, students, and faculty.
+            Review, approve, and manage leave applications submitted by parents,
+            students, and faculty.
           </p>
         </div>
       </div>
@@ -89,21 +81,36 @@ export default function LeaveManagementPage() {
             <tbody className="divide-y divide-slate-100">
               {leaves.map((l) => (
                 <tr key={l.id} className="hover:bg-slate-50/70">
-                  <td className="py-3.5 pl-6 pr-3 font-mono font-bold text-slate-800">{l.id}</td>
-                  <td className="py-3.5 px-3 font-semibold text-slate-900">{l.applicantName}</td>
-                  <td className="py-3.5 px-3 text-slate-600">{l.classOrDesignation}</td>
-                  <td className="py-3.5 px-3 font-mono text-xs text-slate-700">{l.startDate} → {l.endDate}</td>
+                  <td className="py-3.5 pl-6 pr-3 font-mono font-bold text-slate-800">
+                    {l.id}
+                  </td>
+                  <td className="py-3.5 px-3 font-semibold text-slate-900">
+                    {l.applicantName}
+                  </td>
+                  <td className="py-3.5 px-3 text-slate-600">
+                    {l.classOrDesignation}
+                  </td>
+                  <td className="py-3.5 px-3 font-mono text-xs text-slate-700">
+                    {l.startDate} → {l.endDate}
+                  </td>
                   <td className="py-3.5 px-3 text-slate-600 max-w-xs truncate">
-                    {l.reason} {l.hasAttachment && <span className="text-blue-600 font-bold ml-1">📎 Doc</span>}
+                    {l.reason}{" "}
+                    {l.hasAttachment && (
+                      <span className="text-blue-600 font-bold ml-1">
+                        📎 Doc
+                      </span>
+                    )}
                   </td>
                   <td className="py-3.5 px-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                      l.status === "Approved"
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        : l.status === "Rejected"
-                        ? "bg-rose-50 text-rose-700 border border-rose-200"
-                        : "bg-amber-50 text-amber-700 border border-amber-200"
-                    }`}>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                        l.status === "Approved"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : l.status === "Rejected"
+                            ? "bg-rose-50 text-rose-700 border border-rose-200"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                      }`}
+                    >
                       {l.status}
                     </span>
                   </td>
@@ -124,7 +131,9 @@ export default function LeaveManagementPage() {
                         </button>
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-400 font-medium">Completed</span>
+                      <span className="text-xs text-slate-400 font-medium">
+                        Completed
+                      </span>
                     )}
                   </td>
                 </tr>

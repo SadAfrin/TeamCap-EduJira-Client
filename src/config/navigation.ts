@@ -121,6 +121,19 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       description: "View & edit student personal details",
     },
     {
+      label: "Focus Room & Study Tracker",
+      href: "/dashboard/student/focus-room",
+      icon: "focus-room",
+      description: "Track your study sessions and progress",
+    },
+    {
+      label: "Quiz & Assessment",
+      href: "/dashboard/student/quiz",
+      icon: "ai-tutor",
+      badge: "AI Self-Assessment",
+      description: "Take practice quizzes and assess your understanding",
+    },
+    {
       label: "My Attendance",
       href: "/dashboard/student/attendance",
       icon: "attendance",
@@ -150,13 +163,6 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       icon: "ai-tutor",
       badge: "AI 24/7",
       description: "Interactive AI study/homework helper",
-    },
-    {
-      label: "Career & Skill Tracker",
-      href: "/dashboard/student/career-tracker",
-      icon: "career",
-      badge: "Growth",
-      description: "AI-based skill growth and career insights",
     },
     {
       label: "Leave Application",
