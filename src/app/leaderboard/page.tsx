@@ -14,37 +14,32 @@ interface TopStudent {
 export default function LeaderboardPage() {
   const [leaders, setLeaders] = useState<TopStudent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedClass, setSelectedClass] = useState("All");
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      setLoading(true);
       try {
+        // Append the selected class as a query parameter
         const res = await fetch(
-          "http://localhost:5000/api/students/leaderboard",
+          `http://localhost:5000/api/students/top?className=${selectedClass}`,
           {
-            method: "GET",
-            credentials: "include", // 🚨 This is the magic key! It sends your Better Auth cookies.
-            headers: {
-              "Content-Type": "application/json",
-            },
+            credentials: "include", // 🚨 This tells the browser to send your Better Auth session cookies
           },
         );
-
         const json = await res.json();
-        // console.log("🔥 FRONTEND RECEIVED:", json);
+        console.log("Leaderboard data:", json); // Debugging line
         if (json.success) {
           setLeaders(json.data);
-        } else {
-          console.error("Backend refused:", json.message);
         }
       } catch (error) {
-        console.error("Failed to fetch leaderboard", error);
-      } finally {
-        setLoading(false);
+        console.error("Failed to fetch leaderboard");
       }
+      setLoading(false);
     };
 
     fetchLeaderboard();
-  }, []);
+  }, [selectedClass]);
 
   const topThree = leaders.slice(0, 3);
   const runnersUp = leaders.slice(3);
@@ -70,6 +65,40 @@ export default function LeaderboardPage() {
           <p className="text-gray-500 mt-3 font-medium text-lg">
             Celebrating the top 10 scholars across the institution.
           </p>
+
+          <div className="flex justify-center m-12 relative z-20">
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+              <select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="relative appearance-none bg-white/90 backdrop-blur-md border-0 shadow-sm px-8 py-4 rounded-xl text-slate-700 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer pr-12 transition-all"
+              >
+                <option value="All">🏆 All Classes</option>
+                <option value="Class 6">Class 6</option>
+                <option value="Class 7">Class 7</option>
+                <option value="Class 8">Class 8</option>
+                <option value="Class 9">Class 9</option>
+                <option value="Class 10">Class 10</option>
+              </select>
+              {/* Custom dropdown arrow */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-blue-500">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         {leaders.length === 0 ? (

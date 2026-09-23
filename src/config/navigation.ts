@@ -127,6 +127,13 @@ export const ROLE_NAVIGATION_CONFIG: RoleNavigationMap = {
       description: "Track your study sessions and progress",
     },
     {
+      label: "Quiz & Assessment",
+      href: "/dashboard/student/quiz",
+      icon: "ai-tutor",
+      badge: "AI Self-Assessment",
+      description: "Take practice quizzes and assess your understanding",
+    },
+    {
       label: "My Attendance",
       href: "/dashboard/student/attendance",
       icon: "attendance",
