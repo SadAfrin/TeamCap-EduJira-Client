@@ -41,11 +41,14 @@ export default function AIQuizPage() {
     const toastId = toast.loading("AI is crafting your quiz...");
 
     try {
-      const res = await fetch("http://localhost:5000/api/quizzes/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}api/quizzes/generate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic }),
+        },
+      );
       const json = await res.json();
 
       if (json.success) {
@@ -90,7 +93,7 @@ export default function AIQuizPage() {
     const toastId = toast.loading("Saving your results...");
 
     try {
-      await fetch("http://localhost:5000/api/quizzes/save", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/quizzes/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
