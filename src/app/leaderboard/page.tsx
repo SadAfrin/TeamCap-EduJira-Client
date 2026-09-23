@@ -22,7 +22,7 @@ export default function LeaderboardPage() {
       try {
         // Append the selected class as a query parameter
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}api/students/top?className=${selectedClass}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/students/top?className=${selectedClass}`,
           {
             credentials: "include", // 🚨 This tells the browser to send your Better Auth session cookies
           },
