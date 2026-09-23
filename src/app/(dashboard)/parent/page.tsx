@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  ClipboardCheck,
+  Languages,
+  Mail,
+  MessageSquare,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { apiGet } from "@/lib/api";
 import LinkChildModal from "@/components/dashboard/LinkChildModal";
@@ -231,47 +239,53 @@ export default function ParentDashboard() {
             {[
               {
                 label: "Child Progress",
-                icon: "📈",
+                icon: TrendingUp,
                 href: `/dashboard/parent/child-progress?studentId=${activeChild.studentId}`,
                 color: "hover:border-amber-300",
+                iconClass: "text-amber-600",
               },
               {
                 label: "Attendance Logs",
-                icon: "📊",
+                icon: ClipboardCheck,
                 href: `/dashboard/parent/attendance?studentId=${activeChild.studentId}`,
                 color: "hover:border-blue-300",
+                iconClass: "text-blue-600",
               },
               {
                 label: "Exam Results",
-                icon: "🏆",
+                icon: Trophy,
                 href: `/dashboard/parent/results?studentId=${activeChild.studentId}`,
                 color: "hover:border-purple-300",
+                iconClass: "text-purple-600",
               },
               {
                 label: "Leave Request",
-                icon: "✉️",
+                icon: Mail,
                 href: `/dashboard/parent/leave-request?studentId=${activeChild.studentId}`,
                 color: "hover:border-emerald-300",
+                iconClass: "text-emerald-600",
               },
               {
                 label: "Translated Notices",
-                icon: "🌐",
+                icon: Languages,
                 href: "/dashboard/parent/notices",
                 color: "hover:border-indigo-300",
+                iconClass: "text-indigo-600",
               },
               {
                 label: "Teacher Chat",
-                icon: "💬",
+                icon: MessageSquare,
                 href: `/dashboard/parent/messages?studentId=${activeChild.studentId}`,
                 color: "hover:border-rose-300",
+                iconClass: "text-rose-600",
               },
             ].map((item, idx) => (
               <Link
                 key={idx}
                 href={item.href}
-                className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md ${item.color}`}
+                className={`flex h-full flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md ${item.color}`}
               >
-                <span className="text-2xl mb-1">{item.icon}</span>
+                <item.icon className={`mb-2 h-6 w-6 ${item.iconClass}`} strokeWidth={1.75} />
                 <span className="text-xs font-bold text-slate-800 text-center">
                   {item.label}
                 </span>

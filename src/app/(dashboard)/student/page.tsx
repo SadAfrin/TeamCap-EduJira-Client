@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  Bot,
+  CalendarDays,
+  ClipboardCheck,
+  FileText,
+  NotebookPen,
+  Trophy,
+} from "lucide-react";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { apiGet } from "@/lib/api";
 
@@ -94,7 +102,8 @@ export default function StudentDashboard() {
               href="/dashboard/student/ai-tutor"
               className="flex items-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-900/30 hover:brightness-110 transition-all"
             >
-              <span>🤖 AI Tutor Assistant</span>
+              <Bot className="h-4 w-4" strokeWidth={1.75} />
+              <span>AI Tutor Assistant</span>
             </Link>
             <Link
               href="/dashboard/student/routine"
@@ -111,47 +120,53 @@ export default function StudentDashboard() {
         {[
           {
             label: "My Routine",
-            icon: "📅",
+            icon: CalendarDays,
             href: "/dashboard/student/routine",
             color: "hover:border-emerald-300",
+            iconClass: "text-emerald-600",
           },
           {
             label: "Attendance",
-            icon: "📊",
+            icon: ClipboardCheck,
             href: "/dashboard/student/attendance",
             color: "hover:border-blue-300",
+            iconClass: "text-blue-600",
           },
           {
             label: "Assignments",
-            icon: "📝",
+            icon: NotebookPen,
             href: "/dashboard/student/assignments",
             color: "hover:border-purple-300",
+            iconClass: "text-purple-600",
           },
           {
             label: "Exam Results",
-            icon: "🏆",
+            icon: Trophy,
             href: "/dashboard/student/results",
             color: "hover:border-amber-300",
+            iconClass: "text-amber-600",
           },
           {
             label: "AI Tutor Bot",
-            icon: "🤖",
+            icon: Bot,
             href: "/dashboard/student/ai-tutor",
             color: "hover:border-indigo-300",
+            iconClass: "text-indigo-600",
           },
           {
             label: "Leave Request",
-            icon: "🏖️",
+            icon: FileText,
             href: "/dashboard/student/leaves",
             color: "hover:border-teal-300",
+            iconClass: "text-teal-600",
           },
         ].map((item, idx) => (
           <Link
             key={idx}
             href={item.href}
-            className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md ${item.color}`}
+            className={`flex h-full flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md ${item.color}`}
           >
-            <span className="text-2xl mb-1">{item.icon}</span>
+            <item.icon className={`mb-2 h-6 w-6 ${item.iconClass}`} strokeWidth={1.75} />
             <span className="text-xs font-bold text-slate-800 text-center">
               {item.label}
             </span>
