@@ -69,7 +69,7 @@ function FeatureCard({
 
   return (
     <div
-      className={`group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${isAI ? "hover:border-indigo-200 hover:shadow-indigo-900/5" : "hover:border-cyan-200 hover:shadow-cyan-900/5"}`}
+      className={`group relative flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${isAI ? "hover:border-indigo-200 hover:shadow-indigo-900/5" : "hover:border-cyan-200 hover:shadow-cyan-900/5"}`}
     >
       <div>
         {/* Dynamic Icon Wrapper based on variant */}
@@ -154,7 +154,8 @@ export default function ProgramsPage() {
       </section>
 
       {/* AI Features Section */}
-      <section className="mx-auto max-w-7xl  pb-20">
+      <section className="px-6 pb-20 lg:px-8">
+        <div className="mx-auto max-w-7xl">
         <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
             <svg
@@ -176,23 +177,25 @@ export default function ProgramsPage() {
           </h2>
         </div>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {aiFeatures.map((f) =>
             f.link ? (
-              <Link href={f.link} key={f.title} className="group">
+              <Link href={f.link} key={f.title} className="block h-full">
                 <FeatureCard title={f.title} body={f.body} variant="ai" />
               </Link>
             ) : (
-              <div key={f.title} className="opacity-90">
+              <div key={f.title} className="h-full">
                 <FeatureCard title={f.title} body={f.body} variant="ai" />
               </div>
             )
           )}
         </div>
+        </div>
       </section>
 
       {/* Operations Features Section */}
-      <section className="mx-auto max-w-7xl pb-24 ">
+      <section className="px-6 pb-24 lg:px-8">
+        <div className="mx-auto max-w-7xl">
         <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-600">
             <svg
@@ -214,18 +217,19 @@ export default function ProgramsPage() {
           </h2>
         </div>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {operationsFeatures.map((f) =>
             f.link ? (
-              <Link href={f.link} key={f.title} className="group">
+              <Link href={f.link} key={f.title} className="block h-full">
                 <FeatureCard title={f.title} body={f.body} variant="operations" />
               </Link>
             ) : (
-              <div key={f.title} className="opacity-90">
+              <div key={f.title} className="h-full">
                 <FeatureCard title={f.title} body={f.body} variant="operations" />
               </div>
             )
           )}
+        </div>
         </div>
       </section>
     </div>

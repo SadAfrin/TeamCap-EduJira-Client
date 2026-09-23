@@ -3,6 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  ChartColumn,
+  ClipboardCheck,
+  Mail,
+  MessageSquare,
+  NotebookPen,
+  School,
+  Target,
+} from "lucide-react";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { apiGet } from "@/lib/api";
 
@@ -69,13 +78,15 @@ export default function TeacherDashboard() {
               href="/dashboard/teacher/attendance"
               className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-all"
             >
-              <span>✓ Take Daily Attendance</span>
+              <ClipboardCheck className="h-4 w-4" strokeWidth={1.75} />
+              <span>Take Daily Attendance</span>
             </Link>
             <Link
               href="/dashboard/teacher/grades"
               className="flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-600/30 hover:bg-purple-500 transition-all"
             >
-              <span>📊 Result & AI Narratives</span>
+              <ChartColumn className="h-4 w-4" strokeWidth={1.75} />
+              <span>Result & AI Narratives</span>
             </Link>
           </div>
         </div>
@@ -84,19 +95,19 @@ export default function TeacherDashboard() {
       {/* Quick Action Matrix */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Digital Attendance", icon: "📋", href: "/dashboard/teacher/attendance", color: "hover:border-blue-300" },
-          { label: "My Classes", icon: "🏫", href: "/dashboard/teacher/classes", color: "hover:border-emerald-300" },
-          { label: "Grade Entry (AI)", icon: "🎯", href: "/dashboard/teacher/grades", color: "hover:border-purple-300" },
-          { label: "Assignments", icon: "📝", href: "/dashboard/teacher/assignments", color: "hover:border-indigo-300" },
-          { label: "Leave Requests", icon: "✉️", href: "/dashboard/teacher/leaves", color: "hover:border-amber-300" },
-          { label: "Parent Messages", icon: "💬", href: "/dashboard/teacher/messages", color: "hover:border-rose-300" },
+          { label: "Digital Attendance", icon: ClipboardCheck, href: "/dashboard/teacher/attendance", color: "hover:border-blue-300", iconClass: "text-blue-600" },
+          { label: "My Classes", icon: School, href: "/dashboard/teacher/classes", color: "hover:border-emerald-300", iconClass: "text-emerald-600" },
+          { label: "Grade Entry (AI)", icon: Target, href: "/dashboard/teacher/grades", color: "hover:border-purple-300", iconClass: "text-purple-600" },
+          { label: "Assignments", icon: NotebookPen, href: "/dashboard/teacher/assignments", color: "hover:border-indigo-300", iconClass: "text-indigo-600" },
+          { label: "Leave Requests", icon: Mail, href: "/dashboard/teacher/leaves", color: "hover:border-amber-300", iconClass: "text-amber-600" },
+          { label: "Parent Messages", icon: MessageSquare, href: "/dashboard/teacher/messages", color: "hover:border-rose-300", iconClass: "text-rose-600" },
         ].map((item, idx) => (
           <Link
             key={idx}
             href={item.href}
-            className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md ${item.color}`}
+            className={`flex h-full flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md ${item.color}`}
           >
-            <span className="text-2xl mb-1">{item.icon}</span>
+            <item.icon className={`mb-2 h-6 w-6 ${item.iconClass}`} strokeWidth={1.75} />
             <span className="text-xs font-bold text-slate-800 text-center">{item.label}</span>
           </Link>
         ))}

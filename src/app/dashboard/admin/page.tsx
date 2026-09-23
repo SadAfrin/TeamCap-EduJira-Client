@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { GraduationCap, TriangleAlert, Users, Zap } from "lucide-react";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { apiGet } from "@/lib/api";
 
@@ -57,7 +58,8 @@ export default function AdminOverviewPage() {
               href="/dashboard/admin/ai-warning"
               className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20 border border-white/15"
             >
-              <span>⚡ AI Risk Early Warning</span>
+              <Zap className="h-4 w-4" strokeWidth={1.75} />
+              <span>AI Risk Early Warning</span>
             </Link>
           </div>
         </div>
@@ -105,8 +107,8 @@ export default function AdminOverviewPage() {
       {/* Module Shortcuts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 mb-3 font-bold">
-            👥
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+            <Users className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <h3 className="font-bold text-slate-900 text-base">User Management</h3>
           <p className="text-xs text-slate-500 mt-1">
@@ -121,8 +123,8 @@ export default function AdminOverviewPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 mb-3 font-bold">
-            🏫
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <GraduationCap className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <h3 className="font-bold text-slate-900 text-base">Academic Setup</h3>
           <p className="text-xs text-slate-500 mt-1">
@@ -137,8 +139,8 @@ export default function AdminOverviewPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 mb-3 font-bold">
-            ⚡
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <TriangleAlert className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <h3 className="font-bold text-slate-900 text-base">AI Early Warning System</h3>
           <p className="text-xs text-slate-500 mt-1">
